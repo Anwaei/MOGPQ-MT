@@ -21,6 +21,7 @@ end
 
 % evaluate kernel expectations
 A = diag(exp(hyp(1:D)));
+A = inv(L'*inv(A)*L);  % !!!
 I = eye(D);
 Ainv = A\I;
 alpha = exp(hyp(D+1));
@@ -42,6 +43,7 @@ end
 
 Y = Y';  % In the paper of Jakub Pruher, Y is N x Q matrix.
 K = conf.cov(hyp, X_s');
+% K = conf.cov(hyp, Xi_s');
 Ik = eye(N);
 Kinv = Ik/K;  % Solve the inverse of K (MAIN COMPUTATION COMPLEXITY)
 w = Kinv*q;

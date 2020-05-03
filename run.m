@@ -6,6 +6,7 @@
 clear;
 
 func_g = @(x) [x(1)*cos(x(2));x(1)*sin(x(2))];
+% func_g = @(x) [x(1)*cos(x(2))];
 func_g1 = @(x1,x2) x1.*cos(x2);
 func_g2 = @(x1,x2) x1.*sin(x2);
 
@@ -22,12 +23,12 @@ mu2_true = integral2(func_integrand2, -inf, inf, -inf, inf);
 g = func_g(m);
 
 % Sigma points
-[Xi_s, N] = getSigmaPoints(conf.D);
+[Xi_s, N] = getSigmaPoints(conf.D, 'UKF');
 conf.N = N;
 
 % Kernel hypers
 conf.cov = @covSEard;
-alpha = 1; l = [6 3];
+alpha = 1; l = [2 1.5];
 hyp = [log(l) log(alpha)];
 
 [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, func_g, conf);
