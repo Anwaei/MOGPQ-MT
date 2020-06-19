@@ -1,4 +1,4 @@
-function [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, g, conf)
+function [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, g, obsNoise, conf)
 % x: D x 1, p(x)=N(m,P)
 % X_s: D x N sigma points
 % Xi_s: D x N unit sigma points
@@ -9,6 +9,8 @@ function [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, g, conf)
 % SE kernel
 
 D = conf.D; N = conf.N; Q = conf.Q;
+hyp0 = hyp;
+Iq = eye(Q);
 
 L = chol(P, 'lower');
 X_s = m + L*Xi_s;
@@ -16,15 +18,26 @@ X_s = m + L*Xi_s;
 % evaluate function value
 Y = zeros(Q,N);
 for n = 1:N
-    Y(:,n) = g(X_s(:,n));
+    Y(:,n) = g(X_s(:,n)) + obsNoise.drawRndSamples(1);
+end
+
+% learn hyperparameters via ML
+x_train = X_s;
+y_train = Y(1,:);
+ifmin = 0;
+if ifmin == 1
+    hyp = minimize(hyp0, @gp, -100, @infExact, conf.meanfunc, conf.covfunc,...
+        conf.likfunc, x_train', y_train');
+    fprintf('hyp0: alpha = %f, l = %f,%f, sigma2 = %f\n', exp(hyp0.cov(D+1)), exp(hyp0.cov(1:D)), exp(2*hyp0.lik));
+    fprintf('hyp: alpha = %f, l = %f,%f, sigma2 = %f\n', exp(hyp.cov(D+1)), exp(hyp.cov(1:D)), exp(2*hyp.lik));
 end
 
 % evaluate kernel expectations
-A = diag(exp(hyp(1:D)));
+A = diag(exp(hyp.cov(1:D)));
 A = inv(L'*inv(A)*L);  % !!!
 I = eye(D);
 Ainv = A\I;
-alpha = exp(hyp(D+1));
+alpha = exp(hyp.cov(D+1));
 C1 = alpha^2 * det(Ainv+I)^(-1/2);
 C2 = alpha^4 * det(2*Ainv+I)^(-1/2);
 
@@ -42,15 +55,19 @@ for n = 1:N
 end
 
 Y = Y';  % In the paper of Jakub Pruher, Y is N x Q matrix.
-K = conf.cov(hyp, X_s');
-% K = conf.cov(hyp, Xi_s');
+K = conf.covfunc(hyp.cov, X_s');
+sigma2 = exp(2*hyp.lik);
+% K = conf.covfunc(hyp.cov, Xi_s');
 Ik = eye(N);
+K = K + Ik * sigma2;
 Kinv = Ik/K;  % Solve the inverse of K (MAIN COMPUTATION COMPLEXITY)
 w = Kinv*q;
 W = Kinv*Q*Kinv;
 Wc = R*Kinv;
 s2 = kmean - trace(Q*Kinv);
 Mu = Y'*w;
-Pi = Y'*W*Y - Mu*Mu' + s2*I;
+Pi = Y'*W*Y - Mu*Mu' + s2*Iq;
+% Wa = diag(w);
+% Pia = (Y-Mu)'*Wa*(Y-Mu);
 C = L*Wc*Y-m*Mu';
 end
