@@ -60,10 +60,10 @@ updatedStateCov_GP = initialCov;
 
 [Xi_s, N] = getSigmaPoints(conf.D, '5th-Degree CKF');
 conf.N = N;
-conf.covfunc = @covSEard;
+conf.cov = @covSEard;
 alpha = 1; l = 2.1;
-hypState.cov = [log(l) log(alpha)];
-hypMeas.cov = [log(l) log(alpha)];
+hypState = [log(l) log(alpha)];
+hypMeas = [log(l) log(alpha)];
 
 filters.setStates(initialState);
 % sysState = initialState.drawRndSamples(1);
@@ -99,7 +99,7 @@ for k = 1:numTimeSteps
     [~,stateNoiseCov] = sysModel.noise.getMeanAndCov();
     funcMeas = measModel.getFunc();
     [~,measNoiseCov] = measModel.noise.getMeanAndCov();
-    obs_noise = Gaussian(0,1e-6);
+    obs_noise = Gaussian([0;0],[1e-6,0;0,1e-6]);
     
     % Prediction
     [predStateMean_GP, predStateCov_GP] = GPQMT(updatedStateMean_GP,...
@@ -109,7 +109,7 @@ for k = 1:numTimeSteps
     predStateCovsGP(:,k) = predStateCov_GP;
     
     [predMeasMean_GP, predMeasCov_GP, predStateMeasCov_GP] = GPQMT(predStateMean_GP,...
-        predStateCov_GP, hypMeas, Xi_s, funcMeas, obs_noise, conf);
+        predStateCov_GP, hypMeas, Xi_s, funcMeas, conf);
     predMeasCov_GP = predMeasCov_GP + measNoiseCov;
     predMeasMeansGP(:,k) = predMeasMean_GP;
     predMeasCovsGP(:,k) = predMeasCov_GP;
@@ -159,13 +159,3 @@ for i = 1:numFilters
     JNEES = sqrt((log(sum(NEES)./conf.Q)).^2)/numTimeSteps;
     fprintf('JNEES of %s: %f\n', name, JNEES);
 end
-
-figure;
-hold on
-plot(1:numTimeSteps, sysStates, 'DisplayName','States');
-plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-plot(1:numTimeSteps, predStateMeansGP, 'DisplayName','Predicted means');
-plot(1:numTimeSteps, updatedStateMeansGP, 'DisplayName','Updated means');
-legend show;
-xlabel('time');
-ylabel('x');

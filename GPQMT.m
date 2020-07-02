@@ -1,4 +1,4 @@
-function [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, g, obsNoise, conf)
+function [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, g, obs_noise, conf)
 % x: D x 1, p(x)=N(m,P)
 % X_s: D x N sigma points
 % Xi_s: D x N unit sigma points
@@ -18,7 +18,7 @@ X_s = m + L*Xi_s;
 % evaluate function value
 Y = zeros(Q,N);
 for n = 1:N
-    Y(:,n) = g(X_s(:,n)) + obsNoise.drawRndSamples(1);
+    Y(:,n) = g(X_s(:,n)) + obs_noise.drawRndSamples(1);
 end
 
 % learn hyperparameters via ML
@@ -50,16 +50,16 @@ for n = 1:N
     for m = 1:N
         xi_m = Xi_s(:,m);
         z = A\(xi_n+xi_m);
-        Q(n,m) = C2*exp(-1/2*(xi_n'/(A+I)*xi_n + xi_m'/(A+I)*xi_m - z'/(2*Ainv+I)*z));
+        Q(n,m) = C2*exp(-1/2*(xi_n'/A*xi_n + xi_m'/A*xi_m - z'/(2*Ainv+I)*z));
     end
 end
 
 Y = Y';  % In the paper of Jakub Pruher, Y is N x Q matrix.
 K = conf.covfunc(hyp.cov, X_s');
-sigma2 = exp(2*hyp.lik);
+% sigma2 = exp(2*hyp.lik);
 % K = conf.covfunc(hyp.cov, Xi_s');
 Ik = eye(N);
-K = K + Ik * sigma2;
+% K = K + Ik * sigma2;
 Kinv = Ik/K;  % Solve the inverse of K (MAIN COMPUTATION COMPLEXITY)
 w = Kinv*q;
 W = Kinv*Q*Kinv;
@@ -69,5 +69,5 @@ Mu = Y'*w;
 Pi = Y'*W*Y - Mu*Mu' + s2*Iq;
 % Wa = diag(w);
 % Pia = (Y-Mu)'*Wa*(Y-Mu);
-C = L*Wc*Y-m*Mu';
+C = L*Wc*Y;
 end

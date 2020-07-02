@@ -20,7 +20,7 @@ conf_mo.obs_noise = obs_noise;  % observation noise
 conf_mo.model = 'LMC';
 E = 2; conf_mo.LMCsettings.E = E;  % num latent functions
 % conf_mo.LMCsettings.weights = rand(E, conf_mo.Q);  % weights of latent functions
-conf_mo.LMCsettings.weights = [1, 0; 0, 1];
+conf_mo.LMCsettings.weights = [0.6, 0; 0, 1];
 % conf_mo.LMCsettings.weights = [1,1];
 conf_mo.LMCsettings.gp = struct('covfunc',cell(E,1),'meanfunc',cell(E,1),'hyp',cell(E,1));
 [l,alpha] = setSEhyps(E,conf_mo.D);

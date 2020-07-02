@@ -32,10 +32,10 @@ for p = 1:Q
     E_Kc(:,p) = E4(:,:,p) * Kc';
 end
 
-E_K1 = zeros(Q,Q);
+E_K1 = zeros(Q,Q)
 for p = 1:Q
     for q = 1:Q
-        E_K1(p,q) = trace(E3(:,:,p,q)*Kx_inv);
+        E_Kv(p,q) = trace(E3(:,:,p,q)*Kv);
     end
 end
 

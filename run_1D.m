@@ -7,16 +7,17 @@ clear;
 
 % Function setting
 a = 1;
-func_g = @(x) a*x(1,:).*cos(x(2,:));
-% func_g = @(x) [x(1)*cos(x(2))];
+% func_g = @(x) a*x(1,:).*cos(x(2,:));
+func_g = @(x) [a*x(1,:).*cos(x(2,:));a*x(1,:).*sin(x(2,:))];
 func_g1 = @(x1,x2) a*x1.*cos(x2);
-obsNoise = Gaussian(0,0.5);
+% obs_noise = Gaussian(0,0.5);
+obs_noise = Gaussian([0;0],[1e-6,0;0,1e-6]);
 
 conf.D = 2;
-conf.Q = 1;
+conf.Q = 2;
 
 % Sigma points
-[Xi_s, N] = getSigmaPoints(conf.D, 'Asymmetric LCD');
+[Xi_s, N] = getSigmaPoints(conf.D, 'UKF');
 conf.N = N;
 
 % GP settings
@@ -26,6 +27,11 @@ conf.likfunc = @likGauss;
 alpha = 1; l = [2 1.5];
 hyp.cov = [log(l) log(alpha)];
 hyp.lik = log(sqrt(0.4));
+
+% ---------- test ----------
+m = [2; 30/180*pi];
+P = [0.5, 0; 0, 6/180*pi];
+[Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, func_g, obs_noise, conf);
 
 numMC = 1000;
 mtest = 1:1:5;
@@ -53,13 +59,13 @@ for i = 1:Nmtest
         
         xdistribution = Gaussian(m,P);
         x_mc = xdistribution.drawRndSamples(numMC);
-        g_mc = func_g(x_mc) + obsNoise.drawRndSamples(numMC);
+        g_mc = func_g(x_mc) + obs_noise.drawRndSamples(numMC);
         mu_mc = mean(g_mc,2);
         pi_mc = cov(g_mc');
         mu_true(:,k) = mu_mc;
         pi_true(:,:,k) = pi_mc;
         
-        [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, func_g, obsNoise, conf);
+        [Mu, Pi, C] = GPQMT(m, P, hyp, Xi_s, func_g, obs_noise, conf);
         mu_a(:,k) = Mu;
         Pi_a(:,:,k) = Pi;
         
@@ -72,8 +78,8 @@ end
 
 k = 1:Ntest;
 figure(1);
-plot(k,mu_a(1,:),k,mu_true(1,:));
-legend('mu1_evaluated','mu1_true')
+plot(k,mu_a(1,:),k,mu_true(1,:),k,mu_a(2,:),k,mu_true(2,:));
+legend('mu1_evaluated','mu1_true','mu2_evaluated','mu2_true')
 figure(2);
 plot(k,NEES);
 legend('NEES');
@@ -81,7 +87,8 @@ JNEES = sqrt(log(NEES./conf.D).^2);
 figure(3);
 plot(k,JNEES);
 legend('JNEES');
-RMSE = sqrt(1/Ntest*sum((mu_true(1,:)-mu_a(1,:)).^2));
+RMSE = sqrt(1/Ntest*sum((mu_true(1,:)-mu_a(1,:)).^2 + ...
+    (mu_true(2,:)-mu_a(2,:)).^2));
 fprintf('RMSE: %f\n',RMSE);
 MJNEES = mean(JNEES);
 fprintf('MJNEES: %f\n',MJNEES);
