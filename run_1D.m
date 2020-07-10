@@ -11,7 +11,7 @@ a = 1;
 func_g = @(x) [a*x(1,:).*cos(x(2,:));a*x(1,:).*sin(x(2,:))];
 func_g1 = @(x1,x2) a*x1.*cos(x2);
 % obs_noise = Gaussian(0,0.5);
-obs_noise = Gaussian([0;0],[1e-6,0;0,1e-6]);
+obs_noise = Gaussian([0;0],[0.1,0;0,0.1]);
 
 conf.D = 2;
 conf.Q = 2;
@@ -26,7 +26,7 @@ conf.meanfunc = [];
 conf.likfunc = @likGauss;
 alpha = 1; l = [2 1.5];
 hyp.cov = [log(l) log(alpha)];
-hyp.lik = log(sqrt(0.4));
+hyp.lik = log(sqrt(0.1));
 
 % ---------- test ----------
 m = [2; 30/180*pi];

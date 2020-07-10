@@ -16,7 +16,7 @@ elseif strcmp(name, 'Asymmetric LCD')
     samplings.name = 'Asymmetric LCD';
     samplings.sampling = GaussianSamplingLCD();
     samplings.sampling.setSymmetricMode(false);
-    samplings.sampling.setNumSamples(21);
+    samplings.sampling.setNumSamples(18);
 elseif strcmp(name, 'RUKF')
     samplings.name = 'RUKF';
     samplings.sampling = GaussianSamplingRUKF();
@@ -28,7 +28,7 @@ elseif strcmp(name, 'Gauss-Hermite')
 elseif strcmp(name, 'Random')
     samplings.name = 'Random';
     samplings.sampling = GaussianSamplingRnd();
-    samplings.sampling.setNumSamples(100);
+    samplings.sampling.setNumSamples(100); 
 else
     error('Please select a vaild sampling method.')
 end

@@ -1,7 +1,7 @@
 function [data_train, conf_mo] = generateTrainingData(m,P,g,conf_mo)
 Q = conf_mo.Q; D = conf_mo.D;
 % get training inputs
-sample_method = 'UKF';
+sample_method = 'Asymmetric LCD';
 [~, N] = getSigmaPoints(D, sample_method);
 conf_mo.N = N;
 xi_sigma = zeros(D,N,Q);

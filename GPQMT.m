@@ -56,10 +56,10 @@ end
 
 Y = Y';  % In the paper of Jakub Pruher, Y is N x Q matrix.
 K = conf.covfunc(hyp.cov, X_s');
-% sigma2 = exp(2*hyp.lik);
+sigma2 = exp(2*hyp.lik);
 % K = conf.covfunc(hyp.cov, Xi_s');
 Ik = eye(N);
-% K = K + Ik * sigma2;
+K = K + Ik * sigma2;
 Kinv = Ik/K;  % Solve the inverse of K (MAIN COMPUTATION COMPLEXITY)
 w = Kinv*q;
 W = Kinv*Q*Kinv;

@@ -63,7 +63,9 @@ conf.N = N;
 conf.covfunc = @covSEard;
 alpha = 1; l = 2.1;
 hypState.cov = [log(l) log(alpha)];
+hypState.lik = log(sqrt(1e-6));
 hypMeas.cov = [log(l) log(alpha)];
+hypMeas.lik = log(sqrt(1e-6));
 
 filters.setStates(initialState);
 % sysState = initialState.drawRndSamples(1);
@@ -106,21 +108,21 @@ for k = 1:numTimeSteps
         updatedStateCov_GP, hypState, Xi_s, funcState, obs_noise, conf);
     predStateCov_GP = predStateCov_GP + stateNoiseCov;
     predStateMeansGP(:,k) = predStateMean_GP;
-    predStateCovsGP(:,k) = predStateCov_GP;
+    predStateCovsGP(:,:,k) = predStateCov_GP;
     
     [predMeasMean_GP, predMeasCov_GP, predStateMeasCov_GP] = GPQMT(predStateMean_GP,...
         predStateCov_GP, hypMeas, Xi_s, funcMeas, obs_noise, conf);
     predMeasCov_GP = predMeasCov_GP + measNoiseCov;
     predMeasMeansGP(:,k) = predMeasMean_GP;
-    predMeasCovsGP(:,k) = predMeasCov_GP;
-    predStateMeasCovsGP(:,k) = predStateMeasCov_GP;
+    predMeasCovsGP(:,:,k) = predMeasCov_GP;
+    predStateMeasCovsGP(:,:,k) = predStateMeasCov_GP;
     
     % Update
     KalmanGain = predStateMeasCov_GP / predMeasCov_GP;
     updatedStateMean_GP = predStateMean_GP + KalmanGain * (measurement - predMeasMean_GP);
     updatedStateCov_GP = predStateCov_GP - KalmanGain * predMeasCov_GP * KalmanGain';
     updatedStateMeansGP(:,k) = updatedStateMean_GP;
-    updatedStateCovsGP(:,k) = updatedStateCov_GP;
+    updatedStateCovsGP(:,:,k) = updatedStateCov_GP;
     
 end
 
