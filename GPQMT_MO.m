@@ -23,8 +23,8 @@ Kx = createGramMatrix(x_sigma, conf_mo);
 Kx = Kx + kron(In,sigma_o);
 % Kx = Kx + kron(sigma_o,In);
 I = eye(size(Kx));Kx_inv = I/Kx;
-Kv = Kx_inv*(y*y')*Kx_inv - Kx_inv;
-Kv1 = Kx_inv*(y*y')*Kx_inv; Kv2 = Kx_inv;
+Kv = Kx_inv*y*y'*Kx_inv - Kx_inv;
+Kv1 = Kx_inv*y*y'*Kx_inv; Kv2 = Kx_inv;
 Kc = y'*Kx_inv;
 
 E_Kx = E2;
@@ -41,7 +41,7 @@ mu = E_Kx * Kx_inv * y;
 Pi = E_Kv + E_Kxx - mu*mu';
 C = L * E_Kc;
 
-% % ----------- test -----------
+% ----------- test -----------
 % E_Kv1 = zeros(Q,Q);
 % for p = 1:Q
 %     for q = 1:Q
@@ -102,6 +102,11 @@ C = L * E_Kc;
 % C_mean = C_sum/N_test;
 
 % C_gg_sum = zeros(Q,Q);
+% CxEg_sum = zeros(Q,Q);
+% eig_sum = zeros(Q,1);
+% eigC_sum = zeros(Q,1);
+% mineig = zeros(1,N_test);
+% mineigC = zeros(1,N_test);
 % for k = 1:N_test
 %     kx = zeros(Q,N*Q);
 %     x = x_test(:,k);
@@ -117,11 +122,21 @@ C = L * E_Kc;
 %             end
 %         end
 %     end
+%     CxEg = kx*Kv1*kx' - mu*mu';
+%     CxEg_sum = CxEg_sum + CxEg;
+%     eigCxEg = eig(CxEg);
+%     mineig(k) = min(eigCxEg);
+%     eig_sum = eig_sum + eigCxEg;
 %     Cgg = Kxx - kx*Kx_inv*kx';
 %     C_gg_sum = C_gg_sum + Cgg;
 %     eigC = eig(Cgg);
-%     mineig(k) = min(eigC);
+%     mineigC(k) = min(eigC);
+%     eigC_sum = eigC_sum + eigC;
+%     disp(k)
 % end
+% CxEg_mean = CxEg_sum/N_test;
+% eig_mean = eig_sum/N_test;
 % C_gg_mean = C_gg_sum/N_test;
+% eigC_mean = eigC_sum/N_test;
 
 end
