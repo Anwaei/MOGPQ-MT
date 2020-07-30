@@ -11,7 +11,7 @@ end
 xi_sigma = reshape(permute(xi_sigma,[1 3 2]),D,N*Q);
 L = chol(P, 'lower');
 x_sigma = m + L*xi_sigma;
-% get training outputs
+% get training outputs 
 obs_noise = conf_mo.obs_noise;
 noise = obs_noise.drawRndSamples(1);
 if ~isequal(size(noise),[Q,1])

@@ -5,7 +5,7 @@ Q = conf_mo.Q; D = conf_mo.D; E = conf_mo.LMCsettings.E;
 [D1, NQ] = size(xi); N = NQ/Q;
 if D~=D1
     error('Input dimension error');
-end
+end 
 GPs =  conf_mo.LMCsettings.gp;
 weights = conf_mo.LMCsettings.weights;
 L = chol(P, 'lower');
