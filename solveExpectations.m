@@ -25,7 +25,7 @@ for e = 1:E
     M(:,:,e) = Me;
     M_inv(:,:,e) = Me_inv;
     alpha(e) = alphae;
-    C1(e) = alphae^2*det(Me_inv+Im)^(-1/2);
+    C1(e) = alphae^2*det(Me_inv+Im)^(-1/2);  % Why M_inv(1) and M_inv(3) so analogous?
 end
 for e = 1:E
     for f = 1:E
@@ -71,6 +71,7 @@ for p = 1:Q
                         xi_ms = xi(:,(m-1)*Q+s);
                         xi_nt = xi(:,(n-1)*Q+t);
                         E_kqskpt = 0;
+                        E_test = zeros(E,E);
                         for e = 1:E
                             for f = 1:E
                                 z = M_inv(:,:,e)*xi_ms + M_inv(:,:,f)*xi_nt;
@@ -79,27 +80,9 @@ for p = 1:Q
                                     M_inv(:,:,f) + Im)*z));
                                 E_kqskpt = E_kqskpt + weights(e,q)*weights(e,s)...
                                     *weights(f,p)*weights(f,t)*E_kekf;
-                                
+                                E_test(e,f) = weights(e,q)*weights(e,s)...
+                                    *weights(f,p)*weights(f,t)*E_kekf;
 %                                 % ------------ test ------------
-%                                 xi_test = Gaussian(zeros(D,1),eye(D));
-%                                 kekf_test_sum = 0;
-%                                 for num = 1:10000
-%                                     xi_sample = xi_test.drawRndSamples(1);
-%                                     x_sample = m + L*xi_sample; x_ms = m + L*xi_ms; x_nt = m + L*xi_nt;
-%                                     ke_test = GPs(e).covfunc(GPs(e).hyp.cov,x_sample',x_ms');
-%                                     
-%                                     
-% %                                     alphae_test = exp(GPs(e).hyp.cov(D+1));
-% %                                     Lambda_test = diag(exp(GPs(e).hyp.cov(1:D))).^2;
-% %                                     ke_test_test = alphae_test*exp(-1/2*((x_sample-x_ms)'*inv(Lambda_test)*(x_sample-x_ms)));
-%                                     
-%                                     kf_test = GPs(f).covfunc(GPs(f).hyp.cov,x_sample',x_nt');
-%                                     kekf_test = ke_test*kf_test;
-%                                     kekf_test_sum = kekf_test_sum + kekf_test;
-%                                 end
-%                                 kekf_test_mean = kekf_test_sum/num;
-%                                 err = E_kekf - kekf_test_mean;
-%                                 disp(err);
                             end
                         end
                         E_kqkp((m-1)*Q+s,(n-1)*Q+t) = E_kqskpt;
@@ -129,3 +112,24 @@ for q = 1:Q
     end
     E4(:,:,q) = E_xkq;            
 end
+
+% test
+%                                 xi_test = Gaussian(zeros(D,1),eye(D));
+%                                 kekf_test_sum = 0;
+%                                 for num = 1:10000
+%                                     xi_sample = xi_test.drawRndSamples(1);
+%                                     x_sample = m + L*xi_sample; x_ms = m + L*xi_ms; x_nt = m + L*xi_nt;
+%                                     ke_test = GPs(e).covfunc(GPs(e).hyp.cov,x_sample',x_ms');
+%                                     
+%                                     
+% %                                     alphae_test = exp(GPs(e).hyp.cov(D+1));
+% %                                     Lambda_test = diag(exp(GPs(e).hyp.cov(1:D))).^2;
+% %                                     ke_test_test = alphae_test*exp(-1/2*((x_sample-x_ms)'*inv(Lambda_test)*(x_sample-x_ms)));
+%                                     
+%                                     kf_test = GPs(f).covfunc(GPs(f).hyp.cov,x_sample',x_nt');
+%                                     kekf_test = ke_test*kf_test;
+%                                     kekf_test_sum = kekf_test_sum + kekf_test;
+%                                 end
+%                                 kekf_test_mean = kekf_test_sum/num;
+%                                 err = E_kekf - kekf_test_mean;
+%                                 disp(err);
