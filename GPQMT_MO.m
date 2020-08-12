@@ -23,7 +23,7 @@ Kx = createGramMatrix(x_sigma, conf_mo);
 Kx = Kx + kron(In,sigma_o);
 % Kx = Kx + kron(sigma_o,In);
 I = eye(size(Kx));Kx_inv = I/Kx;
-Kv = Kx_inv*y*y'*Kx_inv - Kx_inv;
+Kv = Kx_inv*(y*y')*Kx_inv - Kx_inv;
 Kv1 = Kx_inv*y*y'*Kx_inv; Kv2 = Kx_inv;
 Kc = y'*Kx_inv;
 
