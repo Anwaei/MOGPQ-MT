@@ -24,7 +24,7 @@ Kx = Kx + kron(In,sigma_o);
 % Kx = Kx + kron(sigma_o,In);
 I = eye(size(Kx));Kx_inv = I/Kx;
 Kv = Kx_inv*(y*y')*Kx_inv - Kx_inv;
-Kv1 = Kx_inv*y*y'*Kx_inv; Kv2 = Kx_inv;
+Kv1 = Kx_inv*(y*y')*Kx_inv; Kv2 = Kx_inv;
 Kc = y'*Kx_inv;
 
 E_Kx = E2;
@@ -40,6 +40,7 @@ end
 mu = E_Kx * Kx_inv * y;
 Pi = E_Kv + E_Kxx - mu*mu';
 C = L * E_Kc;
+end
 
 % ----------- test -----------
 % E_Kv1 = zeros(Q,Q);
@@ -138,5 +139,3 @@ C = L * E_Kc;
 % eig_mean = eig_sum/N_test;
 % C_gg_mean = C_gg_sum/N_test;
 % eigC_mean = eigC_sum/N_test;
-
-end

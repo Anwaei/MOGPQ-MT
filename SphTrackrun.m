@@ -95,6 +95,7 @@ updatedStateCov_GP = initialCov;
 %% Simulation
 filters.setStates(initialState);
 sysState = initialStateTrue.drawRndSamples(1);
+sysState = initialStateTrue.getMeanAndCov();
 % sysState = 0.1;
 disp('Simulation start');
 
@@ -181,6 +182,7 @@ for figureNum = 1:confState.D
     legend show;
 end
 
+stateLabel = {'position','velocity','ballistic parameter'};
 for figureNum = confState.D+1:confState.D*2
     figure(figureNum)
     stateNum = figureNum - confState.D;
@@ -192,6 +194,18 @@ for figureNum = confState.D+1:confState.D*2
 %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
     plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
+    legend show;
+end
+measLabel = {'measure'};
+for figureNum = confState.D*2+1:confState.D*2+confMeas.Q
+    figure(figureNum)
+    measNum = figureNum - confState.D*2;
+    hold on
+    xlabel('time');
+    ylabel(measLabel(measNum));
+    title('Estimate of MOGP filter');
+    plot(1:numTimeSteps, measurements(measNum,:), 'DisplayName','Meas');
+    plot(1:numTimeSteps, predMeasMeansGP(measNum,:), 'DisplayName','Predicted measurements');
     legend show;
 end
 
