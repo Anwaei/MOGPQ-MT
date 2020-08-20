@@ -1,15 +1,16 @@
 function [data_train, conf_mo] = generateTrainingData(m,P,g,conf_mo)
 Q = conf_mo.Q; D = conf_mo.D;
+L = chol(P, 'lower');
 % get training inputs
 sample_method = 'Asymmetric LCD';
-[~, N] = getSigmaPoints(D, sample_method);
+sample_cov = conf_mo.sample_cov_ref;
+[~, N] = getSigmaPoints(D, sample_method, sample_cov);
 conf_mo.N = N;
 xi_sigma = zeros(D,N,Q);
 for q = 1:Q
-    xi_sigma(:,:,q) = getSigmaPoints(D, sample_method);
+    xi_sigma(:,:,q) = L\getSigmaPoints(D, sample_method, sample_cov);
 end
 xi_sigma = reshape(permute(xi_sigma,[1 3 2]),D,N*Q);
-L = chol(P, 'lower');
 x_sigma = m + L*xi_sigma;
 % get training outputs 
 obs_noise = conf_mo.obs_noise;

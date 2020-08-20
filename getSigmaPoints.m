@@ -1,4 +1,4 @@
-function [Xi_s, N] = getSigmaPoints(D,name)
+function [Xi_s, N] = getSigmaPoints(D,name,cov)
 % Get the unit sigma points
 
 if strcmp(name, 'UKF')
@@ -16,7 +16,7 @@ elseif strcmp(name, 'Asymmetric LCD')
     samplings.name = 'Asymmetric LCD';
     samplings.sampling = GaussianSamplingLCD();
     samplings.sampling.setSymmetricMode(false);
-    samplings.sampling.setNumSamples(15);
+    samplings.sampling.setNumSamples(18);
 elseif strcmp(name, 'RUKF')
     samplings.name = 'RUKF';
     samplings.sampling = GaussianSamplingRUKF();
@@ -33,7 +33,9 @@ else
     error('Please select a vaild sampling method.')
 end
 
-[samples, weights, numSamples] = samplings.sampling.getStdNormalSamples(D);
+mean = zeros(D,1);
+gaussian = Gaussian(mean, cov);
+[samples, weights, numSamples] = samplings.sampling.getSamples(gaussian);
 
 Xi_s = samples;
 N = numSamples;

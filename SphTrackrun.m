@@ -13,9 +13,11 @@ sysModel = SphTrackSysModel();
 measModel = SphTrackMeasModel();
 
 %% MOGP setting
+sample_cov_ref = diag([1,1,0.8]);
+
 confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
-confState.LMCsettings.weights = [1 0.1 0.1; 0.1 1 0.1; 0.1 0.1 1];  % weights E x Q
+confState.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];  % weights E x Q
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
 [l,alpha] = setSEhypsState(E_state,confState.D);
@@ -25,6 +27,7 @@ for e = 1:E_state  % set each gp
     confState.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     confState.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
+confState.sample_cov_ref = sample_cov_ref;
 
 confMeas.model = 'LMC';
 E_meas = 1; confMeas.LMCsettings.E = E_meas;  % num latent functions
@@ -38,6 +41,7 @@ for e = 1:E_meas  % set each gp
     confMeas.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     confMeas.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
+confMeas.sample_cov_ref = sample_cov_ref;
 
 %% Filters setting
 filters = FilterSet();
