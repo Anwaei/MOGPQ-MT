@@ -70,7 +70,7 @@ numFilters = filters.getNumFilters();
 
 numTimeSteps = 300;
 
-initialState = Gaussian([90;6;1.7],diag([0.0929 1.4865 1]));
+initialState = Gaussian([90;6;1.7],diag([0.0929 1.4865 10]));
 initialStateTrue = Gaussian([90;6;1.5],diag([0.0929 1.4865 1e-4]));
 [initialMean, initialCov] = initialState.getMeanAndCov();
 sysStates = nan(confState.D,numTimeSteps);
