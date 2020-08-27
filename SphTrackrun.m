@@ -17,7 +17,7 @@ sample_cov_ref = diag([1,1,0.8]);
 
 confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
-confState.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];  % weights E x Q
+confState.LMCsettings.weights = [1 0.3 0.3; 0.3 1 0.3; 0.3 0.3 1];  % weights E x Q
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
 [l,alpha] = setSEhypsState(E_state,confState.D);
