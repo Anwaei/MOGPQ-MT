@@ -35,33 +35,34 @@ m = [2; 30/180*pi];
 P = [0.5, 0; 0, 6/180*pi];
 % MOGPQMT learning
 conf_mo.LMCsettings.weights = [-2, -1; -2, 0.5];
+conf_mo.sample_cov_ref = eye(2);
 [data_train, conf_mo] = generateTrainingData(m, P, func_g, conf_mo);
 [mu, Pi, C] = GPQMT_MO(m, P, data_train, conf_mo);
 
 % Definiteness test
-[data_train, conf_mo] = generateTrainingData(m, P, func_g, conf_mo);
-k = 1;
-for a = 2:-0.5:-2
-    for b = 2:-0.5:-2
-        for c = 2:-0.5:-2
-            for d = 2:-0.5:-2
-                if (a~=0||b~=0)&&(c~=0||d~=0)&&abs(det([a,b;c,d]))>1e-15
-                    conf_mo.LMCsettings.weights = [a, b; c, d];
-                    [mu, Pi, C] = GPQMT_MO(m, P, data_train, conf_mo);
-                    eig_Pi = eig(Pi);
-                    min_eig(k) = min(eig_Pi);
-                    if min_eig(k)<0
-                        fprintf('k=%d\n',k);
-                        fprintf('a=%3.2f,b=%3.2f,c=%3.2f,d=%3.2f\n',a,b,c,d);
-                        fprintf('min_eig=%f\n',min_eig(k));
-                        disp(Pi);
-                    end
-                    k = k+1;
-                end
-            end
-        end
-    end
-end
+% [data_train, conf_mo] = generateTrainingData(m, P, func_g, conf_mo);
+% k = 1;
+% for a = 2:-0.5:-2
+%     for b = 2:-0.5:-2
+%         for c = 2:-0.5:-2
+%             for d = 2:-0.5:-2
+%                 if (a~=0||b~=0)&&(c~=0||d~=0)&&abs(det([a,b;c,d]))>1e-15
+%                     conf_mo.LMCsettings.weights = [a, b; c, d];
+%                     [mu, Pi, C] = GPQMT_MO(m, P, data_train, conf_mo);
+%                     eig_Pi = eig(Pi);
+%                     min_eig(k) = min(eig_Pi);
+%                     if min_eig(k)<0
+%                         fprintf('k=%d\n',k);
+%                         fprintf('a=%3.2f,b=%3.2f,c=%3.2f,d=%3.2f\n',a,b,c,d);
+%                         fprintf('min_eig=%f\n',min_eig(k));
+%                         disp(Pi);
+%                     end
+%                     k = k+1;
+%                 end
+%             end
+%         end
+%     end
+% end
 
 numMC = 1000;
 mtest = 1:1:5;
@@ -97,6 +98,7 @@ for i = 1:Nmtest
         NEESs = errors' / Pi * errors;
         % NEES(1,k) = (Mu - mu_true(:,k))' / Pi * (Mu - mu_true(:,k));
         NEES(1,k) = mean(diag(NEESs));
+        % disp(k);
     end
 end
 
