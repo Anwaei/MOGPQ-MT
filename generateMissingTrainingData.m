@@ -11,7 +11,9 @@ for q = 1:Q-1
 %     xi_sigma(:,:,q) = L\getSigmaPoints(D, sample_method, sample_cov);
     xi_sigma(:,:,q) = getSigmaPoints(D, sample_method, sample_cov);
 end
-xi_sigma(:,:,Q) = getSigmaPoints(D, sample_method, sample_cov) + 1.5*diag(sample_cov);
+% xi_sigma(:,:,Q) = getSigmaPoints(D, sample_method, sample_cov) + 2*diag(sample_cov);
+bias = [1;12/180*pi];
+xi_sigma(:,:,Q) = getSigmaPoints(D, sample_method, sample_cov) + L\bias;
 xi_sigma = reshape(permute(xi_sigma,[1 3 2]),D,N*Q);
 x_sigma = m + L*xi_sigma;
 % get training outputs 

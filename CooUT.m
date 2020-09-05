@@ -1,7 +1,7 @@
 function [mu, Pi] = CooUT(m, P, func_g, conf_mo)
 
 sampling = GaussianSamplingUKF();
-sampling.setSampleScaling(1);
+sampling.setSampleScaling(2);
 gaussian = Gaussian(m, P);
 [x_sigma, weights, numSamples] = sampling.getSamples(gaussian);
 

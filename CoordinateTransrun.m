@@ -20,7 +20,7 @@ conf_mo.obs_noise = obs_noise;  % observation noise
 conf_mo.model = 'LMC';
 E = 2; conf_mo.LMCsettings.E = E;  % num latent functions
 % conf_mo.LMCsettings.weights = rand(E, conf_mo.Q);  % weights of latent functions
-conf_mo.LMCsettings.weights = [1, 0.3; 0.3, 1];
+conf_mo.LMCsettings.weights = [1, 0.2; 0.2, 1];
 % conf_mo.LMCsettings.weights = [1,1];
 conf_mo.LMCsettings.gp = struct('covfunc',cell(E,1),'meanfunc',cell(E,1),'hyp',cell(E,1));
 [l,alpha] = setSEhyps(E,conf_mo.D, 'mo');
@@ -37,8 +37,8 @@ conf_so = conf_mo;
 conf_so.LMCsettings.weights = [1, 0; 0, 1];
 [l,alpha] = setSEhyps(E,conf_so.D, 'so');
 for e = 1:E  % set each gp
-    conf_mo.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
-    conf_mo.LMCsettings.gp(e).hyp.lik = log(sqrt(0.4));
+    conf_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
+    conf_so.LMCsettings.gp(e).hyp.lik = log(sqrt(0.4));
 end
 
 %% Run1: fix covariance, test on means
@@ -320,7 +320,7 @@ legend('MOGPQ', 'GPQ', 'UT');
 figure(4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
 k = 1:N_mfix; plot(k,JNEES_mo_mfix,k,JNEES_so_mfix,k,JNEES_ut_mfix);
 legend('MOGPQ', 'GPQ', 'UT');
-figure(5); hold on; title('average RMSE over means with missing data'); xlabel('test numbers'); ylabel('JNEES');
+figure(5); hold on; title('average RMSE over means with missing data'); xlabel('test numbers'); ylabel('RMSE');
 k = 1:N_vfix; plot(k,RMSE_mo_missing,k,RMSE_so_missing);
 legend('MOGPQ', 'GPQ');
 figure(6); hold on; title('average JNEES over means with missing data'); xlabel('test numbers'); ylabel('JNEES');
