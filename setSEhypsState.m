@@ -1,10 +1,15 @@
-function [l,alpha] = setSEhypsState(E,D)
+function [l,alpha] = setSEhypsState(E,D,pattern)
 
+if strcmp(pattern,'mo')
+    l = [80 12 1; 80 12 1.2; 70 12 1];  % l should be E x D
+    alpha = [1; 1; 1];  % alpha should be E x 1
+elseif strcmp(pattern,'so')
+    l = [80 12 1; 80 12 1; 80 12 1];  % l should be E x D
+    alpha = [1; 1; 1];  % alpha should be E x 1
+else
+    error('Pattern error.')
+end
 
-l = [80 12 1; 80 12 1; 80 12 1];  % l should be E x D
-% l = [10 10 10; 10 10 10; 10 10 10];
-alpha = [1; 1; 1];  % alpha should be E x 1
-% alpha = [0.5; 0.5; 0.5];
 if ~isequal(size(l),[E,D]) || ~isequal(size(alpha),[E,1])
     error('Multi gps hyps setting error.')
 end

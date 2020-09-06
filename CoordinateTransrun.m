@@ -4,6 +4,7 @@
 % SE kernel, alpha = 1, l = [60 6]
 
 clear;
+tic
 
 %% Function setting
 a = 1;
@@ -34,16 +35,16 @@ conf_mo.sample_cov_ref = eye(2);
 conf_mo.sample_method = 'UKF';
 
 conf_so = conf_mo;
-conf_so.LMCsettings.weights = [1, 0; 0, 1];
+conf_so.LMCsettings.weights = [0.6, 0.4; 0.4, 0.6];
 [l,alpha] = setSEhyps(E,conf_so.D, 'so');
 for e = 1:E  % set each gp
     conf_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     conf_so.LMCsettings.gp(e).hyp.lik = log(sqrt(0.4));
 end
 
-%% Run1: fix covariance, test on means
 num_MC = 3000;
 
+%% Run1: fix covariance, test on means
 mx1_test = 1:1:5;
 mx2_test = 0/180*pi:20/180*pi:360/180*pi;
 vx1_fix = 0.1:0.2:1.1;
@@ -136,11 +137,9 @@ for nv1 = 1:N_vx1f
 end
 
 %% Run2: fix means, test on covariances
-num_MC = 3000;
-
 mx1_fix = 1:1:5;
 mx2_fix = 0/180*pi:60/180*pi:360/180*pi;
-vx1_test = 0.1:0.2:1.1;
+vx1_test = 0.1:0.1:1.1;
 vx2_test = 6/180*pi:3/180*pi:30/180*pi;
 
 N_mx1f = numel(mx1_fix);
@@ -229,9 +228,7 @@ for nm1 = 1:N_mx1f
     end
 end
 
-%% Run3: missing data test
-num_MC = 3000;
-
+%% Run3: missing data test, vfix
 mx1_test = 1:1:5;
 mx2_test = 0/180*pi:20/180*pi:360/180*pi;
 vx1_fix = 0.1:0.2:1.1;
@@ -243,16 +240,16 @@ N_vx1f = numel(vx1_fix);
 N_vx2f = numel(vx2_fix);
 
 N_mtest = N_mx1t*N_mx2t;
-N_missing = N_vx1f*N_vx2f;
+N_missing_vf = N_vx1f*N_vx2f;
 
-RMSE_mo_missing = zeros(1,N_missing);
-JNEES_mo_missing = zeros(1,N_missing);
-RMSE_so_missing = zeros(1,N_missing);
-JNEES_so_missing = zeros(1,N_missing);
+RMSE_mo_missing_vf = zeros(1,N_missing_vf);
+JNEES_mo_missing_vf = zeros(1,N_missing_vf);
+RMSE_so_missing_vf = zeros(1,N_missing_vf);
+JNEES_so_missing_vf = zeros(1,N_missing_vf);
 
 for nv1 = 1:N_vx1f
     for nv2 = 1:N_vx2f        
-        n_missing = (nv1-1)*N_vx2f + nv2;        
+        n_missing_vf = (nv1-1)*N_vx2f + nv2;        
         mu_true = zeros(conf_mo.Q,N_mtest);
         Pi_true = zeros(conf_mo.Q,conf_mo.Q,N_mtest);
         mu_a_mo = zeros(conf_mo.Q,N_mtest);
@@ -296,33 +293,118 @@ for nv1 = 1:N_vx1f
             end
         end
         RMSE_mo = sqrt(1/N_mtest*sum(sum((mu_true-mu_a_mo).^2)));  % Performance of MOGPQ
-        RMSE_mo_missing(n_missing) = RMSE_mo;
+        RMSE_mo_missing_vf(n_missing_vf) = RMSE_mo;
         JNEES_mo = sqrt(log(mean(NEES_mo)/conf_mo.Q)^2);
-        JNEES_mo_missing(n_missing) = JNEES_mo;
+        JNEES_mo_missing_vf(n_missing_vf) = JNEES_mo;
         RMSE_so = sqrt(1/N_mtest*sum(sum((mu_true-mu_a_so).^2)));  % Performance of GPQ
-        RMSE_so_missing(n_missing) = RMSE_so;
+        RMSE_so_missing_vf(n_missing_vf) = RMSE_so;
         JNEES_so = sqrt(log(mean(NEES_so)/conf_so.Q)^2);
-        JNEES_so_missing(n_missing) = JNEES_so;
-        fprintf('n_missing=%d\n', n_missing);
+        JNEES_so_missing_vf(n_missing_vf) = JNEES_so;
+        fprintf('n_missing_vf=%d\n', n_missing_vf);
+    end
+end
+
+%% Run4: missing data test, mfix
+mx1_fix = 1:1:5;
+mx2_fix = 0/180*pi:60/180*pi:360/180*pi;
+vx1_test = 0.1:0.1:1.1;
+vx2_test = 6/180*pi:3/180*pi:30/180*pi;
+
+N_mx1f = numel(mx1_fix);
+N_mx2f = numel(mx2_fix);
+N_vx1t = numel(vx1_test);
+N_vx2t = numel(vx2_test);
+
+N_vtest = N_vx1t*N_vx2t;
+N_missing_mf = N_mx1f*N_mx2f;
+
+RMSE_mo_missing_mf = zeros(1,N_missing_mf);
+JNEES_mo_missing_mf = zeros(1,N_missing_mf);
+RMSE_so_missing_mf = zeros(1,N_missing_mf);
+JNEES_so_missing_mf = zeros(1,N_missing_mf);
+
+for nm1 = 1:N_mx1f
+    for nm2 = 1:N_mx2f           
+        n_missing_mf = (nm1-1)*N_mx2f + nm2;        
+        mu_true = zeros(conf_mo.Q,N_mtest);
+        Pi_true = zeros(conf_mo.Q,conf_mo.Q,N_mtest);
+        mu_a_mo = zeros(conf_mo.Q,N_mtest);
+        Pi_a_mo = zeros(conf_mo.Q,conf_mo.Q,N_mtest);
+        NEES_mo = zeros(1,N_mtest);
+        mu_a_so = zeros(conf_so.Q,N_mtest);
+        Pi_a_so = zeros(conf_so.Q,conf_so.Q,N_mtest);
+        NEES_so = zeros(1,N_mtest);
+        for i = 1:N_vx1t
+            for j = 1:N_vx2t
+                k = (i-1)*N_vx2t + j;
+                m = [mx1_fix(nm1); mx2_fix(nm2)];
+                P = [vx1_test(i), 0; 0, vx2_test(j)];
+                
+                xdistribution = Gaussian(m,P);
+                x_mc = xdistribution.drawRndSamples(num_MC);
+                g_mc = func_g(x_mc) + obs_noise.drawRndSamples(num_MC);
+                mu_mc = mean(g_mc,2);
+                pi_mc = cov(g_mc');
+                mu_true(:,k) = mu_mc;
+                Pi_true(:,:,k) = pi_mc;
+                
+                [data_train_mo, conf_mo] = generateMissingTrainingData(m, P, func_g, conf_mo);  % MOGPQ
+                [mu_mo, Pi_mo, C_mo] = GPQMT_MO(m, P, data_train_mo, conf_mo);
+                mu_a_mo(:,k) = mu_mo;
+                Pi_a_mo(:,:,k) = Pi_mo;
+                
+                errors_mo = bsxfun(@minus, mu_mo, g_mc);
+                NEESs_mo = errors_mo' / Pi_mo * errors_mo;
+                % NEES(1,k) = (Mu - mu_true(:,k))' / Pi * (Mu - mu_true(:,k));
+                NEES_mo(1,k) = mean(diag(NEESs_mo));
+                
+                [data_train_so, conf_so] = generateMissingTrainingData(m, P, func_g, conf_so);  % GPQ
+                [mu_so, Pi_so, C_so] = GPQMT_MO(m, P, data_train_so, conf_so);
+                mu_a_so(:,k) = mu_so;
+                Pi_a_so(:,:,k) = Pi_so;
+                
+                errors_so = bsxfun(@minus, mu_so, g_mc);
+                NEESs_so = errors_so' / Pi_so * errors_so;
+                NEES_so(1,k) = mean(diag(NEESs_so));
+            end
+        end
+        RMSE_mo = sqrt(1/N_mtest*sum(sum((mu_true-mu_a_mo).^2)));  % Performance of MOGPQ
+        RMSE_mo_missing_mf(n_missing_mf) = RMSE_mo;
+        JNEES_mo = sqrt(log(mean(NEES_mo)/conf_mo.Q)^2);
+        JNEES_mo_missing_mf(n_missing_mf) = JNEES_mo;
+        RMSE_so = sqrt(1/N_mtest*sum(sum((mu_true-mu_a_so).^2)));  % Performance of GPQ
+        RMSE_so_missing_mf(n_missing_mf) = RMSE_so;
+        JNEES_so = sqrt(log(mean(NEES_so)/conf_so.Q)^2);
+        JNEES_so_missing_mf(n_missing_mf) = JNEES_so;
+        fprintf('n_missing_mf=%d\n', n_missing_mf);
     end
 end
 
 %% Figures
-figure(1); hold on; title('average RMSE over means'); xlabel('test numbers'); ylabel('RMSE');
+figure(1); title('results with UT sigma points input');
+subplot(2,2,1); hold on; title('average RMSE over means'); xlabel('test numbers'); ylabel('RMSE');
 k = 1:N_vfix; plot(k,RMSE_mo_vfix,k,RMSE_so_vfix,k,RMSE_ut_vfix);
 legend('MOGPQ', 'GPQ', 'UT');
-figure(2); hold on; title('average JNEES over means'); xlabel('test numbers'); ylabel('JNEES');
+subplot(2,2,2); hold on; title('average JNEES over means'); xlabel('test numbers'); ylabel('JNEES');
 k = 1:N_vfix; plot(k,JNEES_mo_vfix,k,JNEES_so_vfix,k,JNEES_ut_vfix);
 legend('MOGPQ', 'GPQ', 'UT');
-figure(3); hold on; title('average RMSE over covariances'); xlabel('test numbers'); ylabel('RMSE');
+subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel('test numbers'); ylabel('RMSE');
 k = 1:N_mfix; plot(k,RMSE_mo_mfix,k,RMSE_so_mfix,k,RMSE_ut_mfix);
 legend('MOGPQ', 'GPQ', 'UT');
-figure(4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
+subplot(2,2,4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
 k = 1:N_mfix; plot(k,JNEES_mo_mfix,k,JNEES_so_mfix,k,JNEES_ut_mfix);
 legend('MOGPQ', 'GPQ', 'UT');
-figure(5); hold on; title('average RMSE over means with missing data'); xlabel('test numbers'); ylabel('RMSE');
-k = 1:N_vfix; plot(k,RMSE_mo_missing,k,RMSE_so_missing);
+figure(2); title('results with data missing input');
+subplot(2,2,1); hold on; title('average RMSE over means'); xlabel('test numbers'); ylabel('RMSE');
+k = 1:N_vfix; plot(k,RMSE_mo_missing_vf,k,RMSE_so_missing_vf);
 legend('MOGPQ', 'GPQ');
-figure(6); hold on; title('average JNEES over means with missing data'); xlabel('test numbers'); ylabel('JNEES');
-k = 1:N_vfix; plot(k,JNEES_mo_missing,k,JNEES_so_missing);
+subplot(2,2,2); hold on; title('average JNEES over means'); xlabel('test numbers'); ylabel('JNEES');
+k = 1:N_vfix; plot(k,JNEES_mo_missing_vf,k,JNEES_so_missing_vf);
 legend('MOGPQ', 'GPQ');
+subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel('test numbers'); ylabel('RMSE');
+k = 1:N_mfix; plot(k,RMSE_mo_missing_mf,k,RMSE_so_missing_mf);
+legend('MOGPQ', 'GPQ');
+subplot(2,2,4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
+k = 1:N_mfix; plot(k,JNEES_mo_missing_mf,k,JNEES_so_missing_mf);
+legend('MOGPQ', 'GPQ');
+toc

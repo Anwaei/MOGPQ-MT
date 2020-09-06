@@ -272,7 +272,7 @@ end
 stateLabel = {'position','velocity','ballistic parameter'};
 for figureNum = confState_so.D*2+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q
     figure(figureNum)
-    stateNum = figureNum - (confState_so.D*2+confMeas_so.Q);
+    stateNum = figureNum - confState_so.D;
     hold on
     xlabel('time');
     ylabel(stateLabel(stateNum));
@@ -286,7 +286,7 @@ end
 measLabel = {'measure'};
 for figureNum = confState_so.D*3+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q*2
     figure(figureNum)
-    measNum = figureNum - (confState_so.D*3+confMeas_so.Q);
+    measNum = figureNum - confState_so.D*2;
     hold on
     xlabel('time');
     ylabel(measLabel(measNum));
@@ -296,9 +296,7 @@ for figureNum = confState_so.D*3+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q*
     legend show;
 end
 
-RMSEState_ut = sqrt(1/numTimeSteps*sum(sum((updatedPosMean-sysStates).^2)));
-RMSEState_mo = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP-sysStates).^2)));
-RMSEState_so = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP_so-sysStates).^2)));
+RMSEState_mo = 
 
 % figureNum = figureNum + 1;    
 % figure(figureNum);
