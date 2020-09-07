@@ -65,25 +65,25 @@ end
 %% Filters setting
 filters = FilterSet();
 
-filter = EKF();
-% filter.setColor({ 'Color', [0 0.5 0] });
-filters.add(filter);
+% filter = EKF();
+% % filter.setColor({ 'Color', [0 0.5 0] });
+% filters.add(filter);
 
 filter = UKF();
 % filter.setColor({ 'Color', 'r' });
 filters.add(filter);
 
-filter = UKF('Iterative UKF');
-filter.setMaxNumIterations(5);
-% filter.setColor({ 'Color', 'b' });
-filters.add(filter);
+% filter = UKF('Iterative UKF');
+% filter.setMaxNumIterations(5);
+% % filter.setColor({ 'Color', 'b' });
+% filters.add(filter);
 
-filter = SIRPF();
-filter.setNumParticles(10^5);
-filters.add(filter);
+% filter = SIRPF();
+% filter.setNumParticles(10^5);
+% filters.add(filter);
 
-filter = CKF();
-filters.add(filter);
+% filter = CKF();
+% filters.add(filter);
 
 numFilters = filters.getNumFilters();
 
@@ -222,7 +222,7 @@ toc
 
 %% Results
 
-i = 5;  % UKF
+i = 1;  % UKF
 filter = filters.get(i);
 name   = filter.getName();
 
