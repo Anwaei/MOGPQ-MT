@@ -20,7 +20,7 @@ E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
 confState.LMCsettings.weights = [1 0.2 0.2; 0.3 1 0.2; 0.1 0.1 1];  % weights E x Q
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
-[l,alpha] = setSEhypsState(E_state,confState.D,'mo');
+[l,alpha] = setSEhypsState(E_state,confState.D,'mo'); 
 for e = 1:E_state  % set each gp
     confState.LMCsettings.gp(e).covfunc = @covSEard;
     confState.LMCsettings.gp(e).meanfunc = [];
@@ -35,8 +35,8 @@ E_meas = 1; confMeas.LMCsettings.E = E_meas;  % num latent functions
 confMeas.LMCsettings.weights = 1;
 confMeas.LMCsettings.gp = struct('covfunc',cell(E_meas,1),'meanfunc',...
     cell(E_meas,1),'hyp',cell(E_meas,1));
-[l,alpha] = setSEhypsMeas(E_meas,confMeas.D,'mo');
-for e = 1:E_meas  % set each gp342q
+[l,alpha] = setSEhypsMeas(E_meas,confMeas.D,'mo'); 
+for e = 1:E_meas  % set each gp
     confMeas.LMCsettings.gp(e).covfunc = @covSEard;
     confMeas.LMCsettings.gp(e).meanfunc = [];
     confMeas.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
@@ -47,7 +47,7 @@ confMeas.sample_method = 'UKF';
 
 confState_so = confState;
 confState_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
-[l,alpha] = setSEhypsState(E_state,confState_so.D,'so');
+[l,alpha] = setSEhypsState(E_state,confState_so.D,'so'); disp('l_state'); disp(l);
 for e = 1:E_state  % set each gp
     confState_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     confState_so.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
@@ -55,7 +55,7 @@ end
 
 confMeas_so = confMeas;
 confMeas_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
-[l,alpha] = setSEhypsMeas(E_meas,confMeas_so.D,'so');
+[l,alpha] = setSEhypsMeas(E_meas,confMeas_so.D,'so'); disp('l_meas'); disp(l);
 for e = 1:E_meas  % set each gp
     confMeas_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     confMeas_so.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
@@ -216,7 +216,7 @@ for k = 1:numTimeSteps
     updatedStateMeansGP_so(:,k) = updatedStateMean_GP_so;
     updatedStateCovsGP_so(:,:,k) = updatedStateCov_GP_so;
     
-    disp(k);
+    % disp(k);
 end
 toc
 
