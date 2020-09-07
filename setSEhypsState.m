@@ -1,10 +1,10 @@
 function [l,alpha] = setSEhypsState(E,D,pattern)
 
 if strcmp(pattern,'mo')
-    l = [80 60 4; 80 60 4; 80 60 4];  % l should be E x D
+    l = [90 50 3.6; 80 60 3.7; 80 50 4];  % l should be E x D
     alpha = [1; 1; 1];  % alpha should be E x 1
 elseif strcmp(pattern,'so')
-    l = kron([80 60 4], ones(D,1));  % l should be E x D
+    l = kron([90 55 3.7], ones(D,1));  % l should be E x D
     alpha = [1; 1; 1];  % alpha should be E x 1
 else
     error('Pattern error.')

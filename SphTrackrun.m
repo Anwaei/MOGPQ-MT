@@ -17,16 +17,17 @@ sample_cov_ref = diag([1,1,0.8]);
 
 confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
-confState.LMCsettings.weights = [1.0 0.2 0.2; 
-                                 0.2 1.0 0.2; 
-                                 0   0   1.0];  % weights E x Q
+confState.LMCsettings.weights = [1.0 0.0 0.0; 
+                                 0.1 0.8 0.1; 
+                                 0.2 0.25 0.55]';  % weights E x Q
+disp('weights'); disp(confState.LMCsettings.weights);
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
-[l,alpha] = setSEhypsState(E_state,confState.D,'mo'); 
+[l_mostate,alpha] = setSEhypsState(E_state,confState.D,'mo'); disp('l_state_mo'); disp(l_mostate);
 for e = 1:E_state  % set each gp
     confState.LMCsettings.gp(e).covfunc = @covSEard;
     confState.LMCsettings.gp(e).meanfunc = [];
-    confState.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
+    confState.LMCsettings.gp(e).hyp.cov = [log(l_mostate(e,:)) log(alpha(e,:))];
     confState.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confState.sample_cov_ref = sample_cov_ref;
@@ -37,11 +38,11 @@ E_meas = 1; confMeas.LMCsettings.E = E_meas;  % num latent functions
 confMeas.LMCsettings.weights = 1;
 confMeas.LMCsettings.gp = struct('covfunc',cell(E_meas,1),'meanfunc',...
     cell(E_meas,1),'hyp',cell(E_meas,1));
-[l,alpha] = setSEhypsMeas(E_meas,confMeas.D,'mo'); 
+[l_momeas,alpha] = setSEhypsMeas(E_meas,confMeas.D,'mo'); 
 for e = 1:E_meas  % set each gp
     confMeas.LMCsettings.gp(e).covfunc = @covSEard;
     confMeas.LMCsettings.gp(e).meanfunc = [];
-    confMeas.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
+    confMeas.LMCsettings.gp(e).hyp.cov = [log(l_momeas(e,:)) log(alpha(e,:))];
     confMeas.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confMeas.sample_cov_ref = sample_cov_ref;
@@ -49,17 +50,17 @@ confMeas.sample_method = 'UKF';
 
 confState_so = confState;
 confState_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
-[l,alpha] = setSEhypsState(E_state,confState_so.D,'so'); disp('l_state'); disp(l);
+[l_sostate,alpha] = setSEhypsState(E_state,confState_so.D,'so'); disp('l_state_so'); disp(l_sostate);
 for e = 1:E_state  % set each gp
-    confState_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
+    confState_so.LMCsettings.gp(e).hyp.cov = [log(l_sostate(e,:)) log(alpha(e,:))];
     confState_so.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 
 confMeas_so = confMeas;
-confMeas_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
-[l,alpha] = setSEhypsMeas(E_meas,confMeas_so.D,'so'); disp('l_meas'); disp(l);
+confMeas_so.LMCsettings.weights = 1;
+[l_someas,alpha] = setSEhypsMeas(E_meas,confMeas_so.D,'so'); disp('l_meas'); disp(l_someas);
 for e = 1:E_meas  % set each gp
-    confMeas_so.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
+    confMeas_so.LMCsettings.gp(e).hyp.cov = [log(l_someas(e,:)) log(alpha(e,:))];
     confMeas_so.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 
@@ -130,7 +131,13 @@ updatedStateCovsGP_so = nan(confState_so.D, confState_so.D, numTimeSteps);
 updatedStateMean_GP_so = initialMean;
 updatedStateCov_GP_so = initialCov;
 
+%% MC settings
+numMC = 15;
+RMSEState_ut_mc = zeros(1,15); RMSEState_mo_mc = zeros(1,15); RMSEState_so_mc = zeros(1,15);
+JNEESState_ut_mc = zeros(1,15); JNEESState_mo_mc = zeros(1,15); JNEESState_so_mc = zeros(1,15);
+
 %% Simulation
+for m = 1:numMC
 filters.setStates(initialState);
 sysState = initialStateTrue.drawRndSamples(1);
 sysState = initialStateTrue.getMeanAndCov();
@@ -217,87 +224,59 @@ for k = 1:numTimeSteps
     updatedStateCov_GP_so = predStateCov_GP_so - KalmanGain_so * predMeasCov_GP_so * KalmanGain_so';
     updatedStateMeansGP_so(:,k) = updatedStateMean_GP_so;
     updatedStateCovsGP_so(:,:,k) = updatedStateCov_GP_so;
-    
+     
     % disp(k);
 end
 toc
+
+i = 1;  % UKF
+filter = filters.get(i);
+name   = filter.getName();
+
+updatedPosMean = reshape(updatedStateMeans(:,i,:), 3, numTimeSteps);
+RMSEState_ut = sqrt(1/numTimeSteps*sum(sum((updatedPosMean-sysStates).^2)));
+RMSEState_mo = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP-sysStates).^2)));
+RMSEState_so = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP_so-sysStates).^2)));
+fprintf('RMSEState_ut = %.4f, RMSEState_mo = %.4f, RMSEState_so = %.4f\n', ...
+    RMSEState_ut, RMSEState_mo, RMSEState_so);
+
+NEESState_ut = zeros(1,numTimeSteps);
+NEESState_mo = zeros(1,numTimeSteps);
+NEESState_so = zeros(1,numTimeSteps);
+for kt = 1:numTimeSteps
+    % UT
+    err_ut = updatedPosMean(:,kt) - sysStates(:,kt);
+    cov_ut = updatedStateCovs(:, :, i, kt);
+    NEESState_ut(kt) = err_ut'/cov_ut*err_ut;
+    % MO
+    err_mo = updatedStateMeansGP(:,kt) - sysStates(:,kt);
+    cov_mo = updatedStateCovsGP(:,:,kt);
+    NEESState_mo(kt) = err_mo'/cov_mo*err_mo;
+    % SO
+    err_so = updatedStateMeansGP_so(:,kt) - sysStates(:,kt);
+    cov_so = updatedStateCovsGP_so(:,:,kt);
+    NEESState_so(kt) = err_so'/cov_so*err_so;    
+end
+JNEESState_ut = sqrt(log(mean(NEESState_ut)/confState.Q)^2);
+JNEESState_mo = sqrt(log(mean(NEESState_mo)/confState.Q)^2);
+JNEESState_so = sqrt(log(mean(NEESState_so)/confState.Q)^2);
+fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
+    JNEESState_ut, JNEESState_mo, JNEESState_so);
+
+RMSEState_ut_mc(m) = RMSEState_ut;
+RMSEState_mo_mc(m) = RMSEState_mo;
+RMSEState_so_mc(m) = RMSEState_so;
+JNEESState_ut_mc(m) = RMSEState_ut;
+JNEESState_mo_mc(m) = RMSEState_mo;
+JNEESState_so_mc(m) = RMSEState_so;
+
+end
 
 %% Results
 
 i = 1;  % UKF
 filter = filters.get(i);
 name   = filter.getName();
-
-% stateLabel = {'position','velocity','ballistic parameter'};
-% for figureNum = 1:confState.D
-%     figure(figureNum)
-%     stateNum = figureNum;
-%     hold on
-%     predPosMean = reshape(predStateMeans(stateNum,i,:), 1, numTimeSteps);
-%     updatedPosMean = reshape(updatedStateMeans(stateNum,i,:), 1, numTimeSteps);
-%     % updatedPosCovs = reshape(updatedStateCovs(:,:,i,:), confState.Q, confState.Q, numTimeSteps);
-%     xlabel('time');
-%     ylabel(stateLabel(stateNum));
-%     title(['Estimate of ' name]);
-%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
-% %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-%     plot(1:numTimeSteps, predPosMean, 'DisplayName','Predicted means');
-%     plot(1:numTimeSteps, updatedPosMean, 'DisplayName','Updated means');
-%     legend show;
-% end
-
-% stateLabel = {'position','velocity','ballistic parameter'};
-% for figureNum = confState.D+1:confState.D*2
-%     figure(figureNum)
-%     stateNum = figureNum - confState.D;
-%     hold on
-%     xlabel('time');
-%     ylabel(stateLabel(stateNum));
-%     title('Estimate of MOGP filter');
-%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
-% %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-%     plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
-%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
-%     legend show;
-% end
-% measLabel = {'measure'};
-% for figureNum = confState.D*2+1:confState.D*2+confMeas.Q
-%     figure(figureNum)
-%     measNum = figureNum - confState.D*2;
-%     hold on
-%     xlabel('time');
-%     ylabel(measLabel(measNum));
-%     title('Estimate of MOGP filter');
-%     plot(1:numTimeSteps, measurements(measNum,:), 'DisplayName','Meas');
-%     plot(1:numTimeSteps, predMeasMeansGP(measNum,:), 'DisplayName','Predicted measurements');
-%     legend show;
-% end
-% stateLabel = {'position','velocity','ballistic parameter'};
-% for figureNum = confState_so.D*2+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q
-%     figure(figureNum)
-%     stateNum = figureNum - (confState_so.D*2+confMeas_so.Q);
-%     hold on
-%     xlabel('time');
-%     ylabel(stateLabel(stateNum));
-%     title('Estimate of GPMT filter');
-%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
-% %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-%     plot(1:numTimeSteps, predStateMeansGP_so(stateNum,:), 'DisplayName','Predicted means');
-%     plot(1:numTimeSteps, updatedStateMeansGP_so(stateNum,:), 'DisplayName','Updated means');
-%     legend show;
-% end
-% measLabel = {'measure'};
-% for figureNum = confState_so.D*3+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q*2
-%     figure(figureNum)
-%     measNum = figureNum - (confState_so.D*3+confMeas_so.Q);
-%     hold on
-%     xlabel('time');
-%     ylabel(measLabel(measNum));
-%     title('Estimate of GPMT filter');
-%     plot(1:numTimeSteps, measurements(measNum,:), 'DisplayName','Meas');
-%     plot(1:numTimeSteps, predMeasMeansGP_so(measNum,:), 'DisplayName','Predicted measurements');
-%     legend show;
-% end
 
 updatedPosMean = reshape(updatedStateMeans(:,i,:), 3, numTimeSteps);
 RMSEState_ut = sqrt(1/numTimeSteps*sum(sum((updatedPosMean-sysStates).^2)));
@@ -329,10 +308,81 @@ JNEESState_so = sqrt(log(mean(NEESState_so)/confState.Q)^2);
 fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
     JNEESState_ut, JNEESState_mo, JNEESState_so);
 
+% stateLabel = {'position','velocity','ballistic parameter'};
+% for figureNum = 1:confState.D
+%     figure(figureNum)
+%     stateNum = figureNum;
+%     hold on
+%     predPosMean = reshape(predStateMeans(stateNum,i,:), 1, numTimeSteps);
+%     updatedPosMean = reshape(updatedStateMeans(stateNum,i,:), 1, numTimeSteps);
+%     % updatedPosCovs = reshape(updatedStateCovs(:,:,i,:), confState.Q, confState.Q, numTimeSteps);
+%     xlabel('time');
+%     ylabel(stateLabel(stateNum));
+%     title(['Estimate of ' name]);
+%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
+% %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+%     plot(1:numTimeSteps, predPosMean, 'DisplayName','Predicted means');
+%     plot(1:numTimeSteps, updatedPosMean, 'DisplayName','Updated means');
+%     legend show;
+% end
 
-figure;
-plot(1:numTimeSteps, NEESState_ut, 1:numTimeSteps, NEESState_mo, 1:numTimeSteps, NEESState_so);
-legend('ut','mo','so');
+stateLabel = {'position','velocity','ballistic parameter'};
+for figureNum = confState.D+1:confState.D*2
+    figure(figureNum)
+    stateNum = figureNum - confState.D;
+    hold on
+    xlabel('time');
+    ylabel(stateLabel(stateNum));
+    title('Estimate of MOGP filter');
+    plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
+%    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+    plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
+    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
+    legend show;
+end
+measLabel = {'measure'};
+for figureNum = confState.D*2+1:confState.D*2+confMeas.Q
+    figure(figureNum)
+    measNum = figureNum - confState.D*2;
+    hold on
+    xlabel('time');
+    ylabel(measLabel(measNum));
+    title('Estimate of MOGP filter');
+    plot(1:numTimeSteps, measurements(measNum,:), 'DisplayName','Meas');
+    plot(1:numTimeSteps, predMeasMeansGP(measNum,:), 'DisplayName','Predicted measurements');
+    legend show;
+end
+stateLabel = {'position','velocity','ballistic parameter'};
+for figureNum = confState_so.D*2+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q
+    figure(figureNum)
+    stateNum = figureNum - (confState_so.D*2+confMeas_so.Q);
+    hold on
+    xlabel('time');
+    ylabel(stateLabel(stateNum));
+    title('Estimate of GPMT filter');
+    plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
+%    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+    plot(1:numTimeSteps, predStateMeansGP_so(stateNum,:), 'DisplayName','Predicted means');
+    plot(1:numTimeSteps, updatedStateMeansGP_so(stateNum,:), 'DisplayName','Updated means');
+    legend show;
+end
+measLabel = {'measure'};
+for figureNum = confState_so.D*3+confMeas_so.Q+1:confState_so.D*3+confMeas_so.Q*2
+    figure(figureNum)
+    measNum = figureNum - (confState_so.D*3+confMeas_so.Q);
+    hold on
+    xlabel('time');
+    ylabel(measLabel(measNum));
+    title('Estimate of GPMT filter');
+    plot(1:numTimeSteps, measurements(measNum,:), 'DisplayName','Meas');
+    plot(1:numTimeSteps, predMeasMeansGP_so(measNum,:), 'DisplayName','Predicted measurements');
+    legend show;
+end
+
+
+% figure;
+% plot(1:numTimeSteps, NEESState_ut, 1:numTimeSteps, NEESState_mo, 1:numTimeSteps, NEESState_so);
+% legend('ut','mo','so');
 % 
 % figure;
 % plot(1:numTimeSteps, updatedPosMean(3,:), 1:numTimeSteps, updatedStateMeansGP(3,:),...

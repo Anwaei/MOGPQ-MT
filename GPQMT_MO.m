@@ -40,7 +40,7 @@ end
 mu = E_Kx * Kx_inv * y;
 Pi = E_Kv + E_Kxx - mu*mu';
 C = L * E_Kc;
-% Pi = (Pi+Pi')/2;
+Pi = (Pi+Pi')/2;
 
 % % ----------- test -----------
 % E_Kv1 = zeros(Q,Q);
