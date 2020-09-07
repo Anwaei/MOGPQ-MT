@@ -328,7 +328,11 @@ fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ..
 % figure;
 % plot(1:numTimeSteps, NEESState_ut, 1:numTimeSteps, NEESState_mo, 1:numTimeSteps, NEESState_so);
 % legend('ut','mo','so');
-
+% 
+% figure;
+% plot(1:numTimeSteps, updatedPosMean(3,:), 1:numTimeSteps, updatedStateMeansGP(3,:),...
+%     1:numTimeSteps, updatedStateMeansGP_so(3,:), 1:numTimeSteps, sysStates(3,:));
+% legend('ut','mo','so','truth');
 
 % figureNum = figureNum + 1;    
 % figure(figureNum);
