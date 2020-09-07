@@ -93,12 +93,12 @@ for p = 1:Q
         E3(:,:,p,q) = E_kqkp;
     end
 end
-E3_temp = E3;
-for p = 1:Q
-    for q = 1:Q
-        E3(:,:,p,q) = (E3_temp(:,:,p,q) + E3_temp(:,:,q,p)')/2;
-    end
-end
+% E3_temp = E3;
+% for p = 1:Q
+%     for q = 1:Q
+%         E3(:,:,p,q) = (E3_temp(:,:,p,q) + E3_temp(:,:,q,p)')/2;
+%     end
+% end
                 
 %% sovle E4 E4(:,:,q) = Eu[ukq(m+Lu)]
 E4 = zeros(D,N*Q,Q);

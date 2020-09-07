@@ -17,7 +17,9 @@ sample_cov_ref = diag([1,1,0.8]);
 
 confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
-confState.LMCsettings.weights = [1 0.2 0.2; 0.3 1 0.2; 0.1 0.1 1];  % weights E x Q
+confState.LMCsettings.weights = [1.0 0.2 0.2; 
+                                 0.2 1.0 0.2; 
+                                 0   0   1.0];  % weights E x Q
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
 [l,alpha] = setSEhypsState(E_state,confState.D,'mo'); 
@@ -165,31 +167,31 @@ for k = 1:numTimeSteps
     [~,stateNoiseCov] = sysModel.noise.getMeanAndCov();
     funcMeas = measModel.getFunc();
     [~,measNoiseCov] = measModel.noise.getMeanAndCov();
-%     % ---- MO ----
-%     % Prediction
-%     [data_train, confState] = generateTrainingData(updatedStateMean_GP,...
-%         updatedStateCov_GP, funcState, confState);  % [select sample methods]
-%     [predStateMean_GP, predStateCov_GP] = GPQMT_MO(updatedStateMean_GP,...
-%         updatedStateCov_GP, data_train, confState);
-%     predStateCov_GP = predStateCov_GP + stateNoiseCov;
-%     predStateMeansGP(:,k) = predStateMean_GP;
-%     predStateCovsGP(:,:,k) = predStateCov_GP;
-%     
-%     [data_train, confMeas] = generateTrainingData(predStateMean_GP,... 
-%         predStateCov_GP, funcMeas, confMeas);  % [select sample methods]
-%     [predMeasMean_GP, predMeasCov_GP, predStateMeasCov_GP] = GPQMT_MO(predStateMean_GP,...
-%         predStateCov_GP, data_train, confMeas);
-%     predMeasCov_GP = predMeasCov_GP + measNoiseCov;
-%     predMeasMeansGP(:,k) = predMeasMean_GP;
-%     predMeasCovsGP(:,:,k) = predMeasCov_GP;
-%     predStateMeasCovsGP(:,:,k) = predStateMeasCov_GP;
-%     
-%     % Update
-%     KalmanGain = predStateMeasCov_GP / predMeasCov_GP;
-%     updatedStateMean_GP = predStateMean_GP + KalmanGain * (measurement - predMeasMean_GP);
-%     updatedStateCov_GP = predStateCov_GP - KalmanGain * predMeasCov_GP * KalmanGain';
-%     updatedStateMeansGP(:,k) = updatedStateMean_GP;
-%     updatedStateCovsGP(:,:,k) = updatedStateCov_GP;
+    % ---- MO ----
+    % Prediction
+    [data_train, confState] = generateTrainingData(updatedStateMean_GP,...
+        updatedStateCov_GP, funcState, confState);  % [select sample methods]
+    [predStateMean_GP, predStateCov_GP] = GPQMT_MO(updatedStateMean_GP,...
+        updatedStateCov_GP, data_train, confState);
+    predStateCov_GP = predStateCov_GP + stateNoiseCov;
+    predStateMeansGP(:,k) = predStateMean_GP;
+    predStateCovsGP(:,:,k) = predStateCov_GP;
+    
+    [data_train, confMeas] = generateTrainingData(predStateMean_GP,... 
+        predStateCov_GP, funcMeas, confMeas);  % [select sample methods]
+    [predMeasMean_GP, predMeasCov_GP, predStateMeasCov_GP] = GPQMT_MO(predStateMean_GP,...
+        predStateCov_GP, data_train, confMeas);
+    predMeasCov_GP = predMeasCov_GP + measNoiseCov;
+    predMeasMeansGP(:,k) = predMeasMean_GP;
+    predMeasCovsGP(:,:,k) = predMeasCov_GP;
+    predStateMeasCovsGP(:,:,k) = predStateMeasCov_GP;
+    
+    % Update
+    KalmanGain = predStateMeasCov_GP / predMeasCov_GP;
+    updatedStateMean_GP = predStateMean_GP + KalmanGain * (measurement - predMeasMean_GP);
+    updatedStateCov_GP = predStateCov_GP - KalmanGain * predMeasCov_GP * KalmanGain';
+    updatedStateMeansGP(:,k) = updatedStateMean_GP;
+    updatedStateCovsGP(:,:,k) = updatedStateCov_GP;
     
     % ---- SO ----
     [data_train, confState_so] = generateTrainingData(updatedStateMean_GP_so,...
@@ -313,6 +315,9 @@ for k = 1:numTimeSteps
     cov_ut = updatedStateCovs(:, :, i, k);
     NEESState_ut(k) = err_ut'/cov_ut*err_ut;
     % MO
+    err_mo = updatedStateMeansGP(:,k) - sysStates(:,k);
+    cov_mo = updatedStateCovsGP(:,:,k);
+    NEESState_mo(k) = err_mo'/cov_mo*err_mo;
     % SO
     err_so = updatedStateMeansGP_so(:,k) - sysStates(:,k);
     cov_so = updatedStateCovsGP_so(:,:,k);
@@ -325,9 +330,9 @@ fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ..
     JNEESState_ut, JNEESState_mo, JNEESState_so);
 
 
-% figure;
-% plot(1:numTimeSteps, NEESState_ut, 1:numTimeSteps, NEESState_mo, 1:numTimeSteps, NEESState_so);
-% legend('ut','mo','so');
+figure;
+plot(1:numTimeSteps, NEESState_ut, 1:numTimeSteps, NEESState_mo, 1:numTimeSteps, NEESState_so);
+legend('ut','mo','so');
 % 
 % figure;
 % plot(1:numTimeSteps, updatedPosMean(3,:), 1:numTimeSteps, updatedStateMeansGP(3,:),...

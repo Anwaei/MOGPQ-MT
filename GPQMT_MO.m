@@ -39,11 +39,10 @@ end
 
 mu = E_Kx * Kx_inv * y;
 Pi = E_Kv + E_Kxx - mu*mu';
-% Pi = (Pi+Pi')/2;
 C = L * E_Kc;
-end
+% Pi = (Pi+Pi')/2;
 
-% ----------- test -----------
+% % ----------- test -----------
 % E_Kv1 = zeros(Q,Q);
 % for p = 1:Q
 %     for q = 1:Q
@@ -58,6 +57,11 @@ end
 % end
 % Pi_1 = E_Kv1 - mu*mu';
 % Pi_2 = - E_Kv2 + E_Kxx;
+
+
+end
+
+
 
 % % ----------- test -----------
 % E = conf_mo.LMCsettings.E; 
