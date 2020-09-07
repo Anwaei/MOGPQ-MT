@@ -39,6 +39,7 @@ end
 
 mu = E_Kx * Kx_inv * y;
 Pi = E_Kv + E_Kxx - mu*mu';
+% Pi = (Pi+Pi')/2;
 C = L * E_Kc;
 end
 

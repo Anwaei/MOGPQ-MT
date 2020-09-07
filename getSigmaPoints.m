@@ -4,14 +4,14 @@ function [Xi_s, N] = getSigmaPoints(D,name,cov)
 if strcmp(name, 'UKF')
     samplings.name = 'UKF';
     samplings.sampling = GaussianSamplingUKF();
-    samplings.sampling.setSampleScaling(1);
+    samplings.sampling.setSampleScaling(2);
 elseif strcmp(name, '5th-Degree CKF')
     samplings.name = '5th-Degree CKF';
     samplings.sampling = GaussianSamplingCKF();
 elseif strcmp(name, 'Symmetric LCD')
     samplings.name = 'Symmetric LCD';
     samplings.sampling = GaussianSamplingLCD();
-    samplings.sampling.setNumSamplesByFactor(10);
+    samplings.sampling.setNumSamplesByFactor(7);
 elseif strcmp(name, 'Asymmetric LCD')
     samplings.name = 'Asymmetric LCD';
     samplings.sampling = GaussianSamplingLCD();
