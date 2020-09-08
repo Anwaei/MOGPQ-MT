@@ -19,7 +19,7 @@ confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
 confState.LMCsettings.weights = [1.0 0.0 0.0; 
                                  0.1 0.8 0.1; 
-                                 0.2 0.25 0.55]';  % weights E x Q
+                                 0.25 0.25 0.5]';  % weights E x Q
 disp('weights'); disp(confState.LMCsettings.weights);
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
@@ -63,73 +63,8 @@ for e = 1:E_meas  % set each gp
     confMeas_so.LMCsettings.gp(e).hyp.cov = [log(l_someas(e,:)) log(alpha(e,:))];
     confMeas_so.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
-
-
-%% Filters setting
-filters = FilterSet();
-
-% filter = EKF();
-% % filter.setColor({ 'Color', [0 0.5 0] });
-% filters.add(filter);
-
-filter = UKF();
-% filter.setColor({ 'Color', 'r' });
-filters.add(filter);
-
-% filter = UKF('Iterative UKF');
-% filter.setMaxNumIterations(5);
-% % filter.setColor({ 'Color', 'b' });
-% filters.add(filter);
-
-% filter = SIRPF();
-% filter.setNumParticles(10^5);
-% filters.add(filter);
-
-% filter = CKF();
-% filters.add(filter);
-
-numFilters = filters.getNumFilters();
-
-numTimeSteps = 300;
-
-initialState = Gaussian([90;6;1.7],diag([0.0929 1.4865 10]));
-initialStateTrue = Gaussian([90;6;1.5],diag([0.0929 1.4865 1e-4]));
-[initialMean, initialCov] = initialState.getMeanAndCov();
-sysStates = nan(confState.D,numTimeSteps);
-measurements = nan(confMeas.Q,numTimeSteps);
-
-% Filters
-updatedStateMeans  = nan(confState.D, numFilters, numTimeSteps);
-updatedStateCovs   = nan(confState.D, confState.D, numFilters, numTimeSteps);
-predStateMeans     = nan(confState.D, numFilters, numTimeSteps);
-predStateCovs      = nan(confState.D, confState.D, numFilters, numTimeSteps);
-runtimesUpdate     = nan(numFilters, numTimeSteps);
-runtimesPrediction = nan(numFilters, numTimeSteps);
-
-%% GP Filters
-% MO
-predStateMeansGP = nan(confState.D, numTimeSteps);
-predStateCovsGP = nan(confState.D, confState.D, numTimeSteps);
-predMeasMeansGP = nan(confMeas.Q, numTimeSteps);
-predMeasCovsGP = nan(confMeas.Q, confMeas.Q, numTimeSteps);
-predStateMeasCovsGP = nan(confMeas.D, confMeas.Q, numTimeSteps);
-updatedStateMeansGP = nan(confState.D, numTimeSteps);
-updatedStateCovsGP = nan(confState.D, confState.D, numTimeSteps);
-
-updatedStateMean_GP = initialMean;
-updatedStateCov_GP = initialCov;
-
-% SO
-predStateMeansGP_so = nan(confState_so.D, numTimeSteps);
-predStateCovsGP_so = nan(confState_so.D, confState_so.D, numTimeSteps);
-predMeasMeansGP_so = nan(confMeas_so.Q, numTimeSteps);
-predMeasCovsGP_so = nan(confMeas_so.Q, confMeas_so.Q, numTimeSteps);
-predStateMeasCovsGP_so = nan(confMeas_so.D, confMeas_so.Q, numTimeSteps);
-updatedStateMeansGP_so = nan(confState_so.D, numTimeSteps);
-updatedStateCovsGP_so = nan(confState_so.D, confState_so.D, numTimeSteps);
-
-updatedStateMean_GP_so = initialMean;
-updatedStateCov_GP_so = initialCov;
+%% Initialization
+initialInference;
 
 %% MC settings
 numMC = 15;
@@ -138,6 +73,7 @@ JNEESState_ut_mc = zeros(1,15); JNEESState_mo_mc = zeros(1,15); JNEESState_so_mc
 
 %% Simulation
 for m = 1:numMC
+    initialInference;
     filters.setStates(initialState);
     sysState = initialStateTrue.drawRndSamples(1);
     sysState = initialStateTrue.getMeanAndCov();
@@ -266,9 +202,11 @@ for m = 1:numMC
     RMSEState_ut_mc(m) = RMSEState_ut;
     RMSEState_mo_mc(m) = RMSEState_mo;
     RMSEState_so_mc(m) = RMSEState_so;
-    JNEESState_ut_mc(m) = RMSEState_ut;
-    JNEESState_mo_mc(m) = RMSEState_mo;
-    JNEESState_so_mc(m) = RMSEState_so;
+    JNEESState_ut_mc(m) = JNEESState_ut;
+    JNEESState_mo_mc(m) = JNEESState_mo;
+    JNEESState_so_mc(m) = JNEESState_so;
+    
+    fprintf('MC number: %d \n', m);
     
 end
 
