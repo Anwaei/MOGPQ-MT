@@ -19,7 +19,7 @@ confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
 confState.LMCsettings.weights = [1.0 0.0 0.0; 
                                  0.1 0.8 0.1; 
-                                 0.25 0.25 0.5]';  % weights E x Q
+                                 0.2 0.2 0.6]';  % weights E x Q
 disp('weights'); disp(confState.LMCsettings.weights);
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
@@ -67,7 +67,7 @@ end
 initialInference;
 
 %% MC settings
-numMC = 15;
+numMC = 1;
 RMSEState_ut_mc = zeros(1,15); RMSEState_mo_mc = zeros(1,15); RMSEState_so_mc = zeros(1,15);
 JNEESState_ut_mc = zeros(1,15); JNEESState_mo_mc = zeros(1,15); JNEESState_so_mc = zeros(1,15);
 
@@ -161,7 +161,7 @@ for m = 1:numMC
         updatedStateMeansGP_so(:,k) = updatedStateMean_GP_so;
         updatedStateCovsGP_so(:,:,k) = updatedStateCov_GP_so;
         
-        % disp(k);
+        % disp(k);  
     end
     toc
     
@@ -264,20 +264,39 @@ end
 %     legend show;
 % end
 
-% stateLabel = {'position','velocity','ballistic parameter'};
-% for figureNum = confState.D+1:confState.D*2
-%     figure(figureNum)
-%     stateNum = figureNum - confState.D;
-%     hold on
-%     xlabel('time');
-%     ylabel(stateLabel(stateNum));
-%     title('Estimate of MOGP filter');
-%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','States');
-% %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-%     plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
-%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
-%     legend show;
-% end
+figure(20); 
+stateLabel = {'position','velocity','ballistic parameter'};
+StateLabel = {'Position','Velocity','Ballistic parameter'};
+sposts = zeros(confState.D, numTimeSteps);
+for n = 1:numTimeSteps
+    sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
+end
+for figureNum = confState.D+1:confState.D*2
+    % figure(figureNum)
+    stateNum = figureNum - confState.D;
+    subplot(3,1,stateNum);
+    if stateNum == 3
+        axis([0 300 -2 4]);
+    end
+    hold on
+    xlabel('time');
+    ylabel(stateLabel(stateNum));
+    titlename = strcat(StateLabel(stateNum),' state trajectory');
+    title(titlename);
+    ns = 1:numTimeSteps;
+    mpost = updatedStateMeansGP(stateNum,:)';
+    spost = (sqrt(sposts(stateNum,:)))';
+    hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
+    % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
+    set(hi,'handlevisibility','off');
+    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
+    plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','True states');
+    %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+    % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
+    legend show;    
+end
+
+
 % measLabel = {'measure'};
 % for figureNum = confState.D*2+1:confState.D*2+confMeas.Q
 %     figure(figureNum)
