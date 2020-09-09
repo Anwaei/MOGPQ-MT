@@ -381,30 +381,30 @@ for nm1 = 1:N_mx1f
 end
 
 %% Figures
-figure(1); title('results with UT sigma points input');
-subplot(2,2,1); hold on; title('average RMSE over means'); xlabel('test numbers'); ylabel('RMSE');
-k = 1:N_vfix; plot(k,RMSE_mo_vfix,k,RMSE_so_vfix,k,RMSE_ut_vfix);
-legend('MOGPQ', 'GPQ', 'UT');
-subplot(2,2,2); hold on; title('average JNEES over means'); xlabel('test numbers'); ylabel('JNEES');
+figure(1); title('results with UT sigma points input'); set(gcf,'unit','centimeters','position',[5 5 16 14])
+subplot(2,2,1); hold on; title('average RMSE over means'); xlabel({'$$l$$'},'Interpreter','latex'); ylabel('RMSE');
+k = 1:N_vfix; plot(k,RMSE_mo_vfix,k,RMSE_so_vfix,k,RMSE_ut_vfix); ylim([0.02 0.07]);
+legend('MOGPQ', 'GPQ', 'UT', 'location', 'NorthWest');
+subplot(2,2,2); hold on; title('average JNEES over means'); xlabel({'$$l$$'},'Interpreter','latex'); ylabel('JNEES');
 k = 1:N_vfix; plot(k,JNEES_mo_vfix,k,JNEES_so_vfix,k,JNEES_ut_vfix);
-legend('MOGPQ', 'GPQ', 'UT');
-subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel('test numbers'); ylabel('RMSE');
-k = 1:N_mfix; plot(k,RMSE_mo_mfix,k,RMSE_so_mfix,k,RMSE_ut_mfix);
-legend('MOGPQ', 'GPQ', 'UT');
-subplot(2,2,4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
-k = 1:N_mfix; plot(k,JNEES_mo_mfix,k,JNEES_so_mfix,k,JNEES_ut_mfix);
-legend('MOGPQ', 'GPQ', 'UT');
-figure(2); title('results with data missing input');
-subplot(2,2,1); hold on; title('average RMSE over means'); xlabel('test numbers'); ylabel('RMSE');
-k = 1:N_vfix; plot(k,RMSE_mo_missing_vf,k,RMSE_so_missing_vf);
-legend('MOGPQ', 'GPQ');
-subplot(2,2,2); hold on; title('average JNEES over means'); xlabel('test numbers'); ylabel('JNEES');
-k = 1:N_vfix; plot(k,JNEES_mo_missing_vf,k,JNEES_so_missing_vf);
-legend('MOGPQ', 'GPQ');
-subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel('test numbers'); ylabel('RMSE');
-k = 1:N_mfix; plot(k,RMSE_mo_missing_mf,k,RMSE_so_missing_mf);
-legend('MOGPQ', 'GPQ');
-subplot(2,2,4); hold on; title('average JNEES over covariances'); xlabel('test numbers'); ylabel('JNEES');
-k = 1:N_mfix; plot(k,JNEES_mo_missing_mf,k,JNEES_so_missing_mf);
-legend('MOGPQ', 'GPQ');
+legend('MOGPQ', 'GPQ', 'UT', 'location', 'NorthWest');
+subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel({'$$n$$'},'Interpreter','latex'); ylabel('RMSE');
+k = 1:N_mfix; plot(k,RMSE_mo_mfix,k,RMSE_so_mfix,k,RMSE_ut_mfix); xlim([0 35]);
+legend('MOGPQ', 'GPQ', 'UT', 'location', 'NorthWest');
+subplot(2,2,4); hold on; title('average JNEES over covariances'); xlabel({'$$n$$'},'Interpreter','latex'); ylabel('JNEES');
+k = 1:N_mfix; plot(k,JNEES_mo_mfix,k,JNEES_so_mfix,k,JNEES_ut_mfix); xlim([0 35]); ylim([0 0.4]);
+legend('MOGPQ', 'GPQ', 'UT', 'location', 'NorthWest');
+figure(2); title('results with data missing input'); set(gcf,'unit','centimeters','position',[6 6 16 14])
+subplot(2,2,1); hold on; title('average RMSE over means'); xlabel({'$$l$$'},'Interpreter','latex'); ylabel('RMSE');
+k = 1:N_vfix; plot(k,RMSE_mo_missing_vf,k,RMSE_so_missing_vf); ylim([0 0.5]);
+legend('MOGPQ', 'GPQ', 'location', 'NorthWest');
+subplot(2,2,2); hold on; title('average JNEES over means'); xlabel({'$$l$$'},'Interpreter','latex'); ylabel('JNEES');
+k = 1:N_vfix; plot(k,JNEES_mo_missing_vf,k,JNEES_so_missing_vf); ylim([0 1.1]);
+legend('MOGPQ', 'GPQ', 'location', 'NorthWest');
+subplot(2,2,3); hold on; title('average RMSE over covariances'); xlabel({'$$n$$'},'Interpreter','latex'); ylabel('RMSE');
+k = 1:N_mfix; plot(k,RMSE_mo_missing_mf,k,RMSE_so_missing_mf); xlim([0 35]);
+legend('MOGPQ', 'GPQ', 'location', 'NorthWest');
+subplot(2,2,4); hold on; title('average JNEES over covariances');xlabel({'$$n$$'},'Interpreter','latex'); ylabel('JNEES');
+k = 1:N_mfix; plot(k,JNEES_mo_missing_mf,k,JNEES_so_missing_mf); xlim([0 35]); ylim([0 1.3]);
+legend('MOGPQ', 'GPQ', 'location', 'NorthWest');
 toc

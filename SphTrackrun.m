@@ -161,7 +161,7 @@ for m = 1:numMC
         updatedStateMeansGP_so(:,k) = updatedStateMean_GP_so;
         updatedStateCovsGP_so(:,:,k) = updatedStateCov_GP_so;
         
-        % disp(k);  
+        disp(k);  
     end
     toc
     
@@ -276,10 +276,10 @@ for figureNum = confState.D+1:confState.D*2
     stateNum = figureNum - confState.D;
     subplot(3,1,stateNum);
     if stateNum == 3
-        axis([0 300 -2 4]);
+        axis([0 300 -8 8]);
     end
     hold on
-    xlabel('time');
+    xlabel('time index');
     ylabel(stateLabel(stateNum));
     titlename = strcat(StateLabel(stateNum),' state trajectory');
     title(titlename);
