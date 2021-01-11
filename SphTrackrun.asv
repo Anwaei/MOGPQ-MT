@@ -19,7 +19,7 @@ confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
 confState.LMCsettings.weights = [1.0 0.0 0.0; 
                                  0.1 0.8 0.1; 
-                                 0.25 0.25 0.5]';  % weights E x Q
+                                 0.2 0.2 0.6]';  % weights E x Q
 disp('weights'); disp(confState.LMCsettings.weights);
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
@@ -178,8 +178,8 @@ for m = 1:numMC
     RMSEState_ut = sqrt(1/numTimeSteps*sum(sum((updatedPosMean_ut-sysStates).^2)));
     RMSEState_mo = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP-sysStates).^2)));
     RMSEState_so = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP_so-sysStates).^2)));
-    fprintf('RMSEState_ekf = %.4f, RMSEState_ukf = %.4f, RMSEState_mo = %.4f, RMSEState_so = %.4f\n', ...
-        RMSEState_ekf, RMSEState_ut, RMSEState_mo, RMSEState_so);
+    fprintf('RMSEState_ukf = %.4f, RMSEState_ekf = %.4f, RMSEState_mo = %.4f, RMSEState_so = %.4f\n', ...
+        RMSEState_ut, RMSEState_ekf, RMSEState_mo, RMSEState_so);
     
     NEESState_ut = zeros(1,numTimeSteps);
     NEESState_ekf = zeros(1,numTimeSteps);
@@ -203,12 +203,12 @@ for m = 1:numMC
         cov_so = updatedStateCovsGP_so(:,:,kt);
         NEESState_so(kt) = err_so'/cov_so*err_so;
     end
-    JNEESState_ekf = sqrt(log(mean(NEESState_ekf)/confState.Q)^2);
+    JNEESState_ekf = sqrt(log(mean(NEESState_ut)/confState.Q)^2);
     JNEESState_ut = sqrt(log(mean(NEESState_ut)/confState.Q)^2);
     JNEESState_mo = sqrt(log(mean(NEESState_mo)/confState.Q)^2);
     JNEESState_so = sqrt(log(mean(NEESState_so)/confState.Q)^2);
-    fprintf('JNEESState_ekf = %.4f, JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
-        JNEESState_ekf, JNEESState_ut, JNEESState_mo, JNEESState_so);
+    fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
+        JNEESState_ut, JNEESState_mo, JNEESState_so);
     
     RMSEState_ut_mc(m) = RMSEState_ut;
     RMSEState_mo_mc(m) = RMSEState_mo;

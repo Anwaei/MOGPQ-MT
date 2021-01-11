@@ -1,9 +1,9 @@
 %% Filters setting
 filters = FilterSet();
 
-% filter = EKF();
-% % filter.setColor({ 'Color', [0 0.5 0] });
-% filters.add(filter);
+filter = EKF();
+% filter.setColor({ 'Color', [0 0.5 0] });
+filters.add(filter);
 
 filter = UKF();
 % filter.setColor({ 'Color', 'r' });
