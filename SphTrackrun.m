@@ -19,7 +19,7 @@ confState.model = 'LMC';
 E_state = 3; confState.LMCsettings.E = E_state;  % num latent functions
 confState.LMCsettings.weights = [1.0 0.0 0.0; 
                                  0.1 0.8 0.1; 
-                                 0.25 0.25 0.5]';  % weights E x Q
+                                 0.2 0.2 0.6]';  % weights E x Q
 disp('weights'); disp(confState.LMCsettings.weights);
 confState.LMCsettings.gp = struct('covfunc',cell(E_state,1),'meanfunc',...
     cell(E_state,1),'hyp',cell(E_state,1));
