@@ -31,7 +31,7 @@ for e = 1:E  % set each gp
     conf_mo.LMCsettings.gp(e).hyp.cov = [log(l(e,:)) log(alpha(e,:))];
     conf_mo.LMCsettings.gp(e).hyp.lik = log(sqrt(0.4));
 end
-conf_mo.sample_cov_ref = eye(2);
+conf_mo.sample_cov_ref = eye(conf_mo.Q);
 conf_mo.sample_method = 'UKF';
 
 conf_so = conf_mo;
@@ -366,6 +366,7 @@ for nm1 = 1:N_mx1f
                 errors_so = bsxfun(@minus, mu_so, g_mc);
                 NEESs_so = errors_so' / Pi_so * errors_so;
                 NEES_so(1,k) = mean(diag(NEESs_so));
+                
             end
         end
         RMSE_mo = sqrt(1/N_mtest*sum(sum((mu_true-mu_a_mo).^2)));  % Performance of MOGPQ
@@ -379,6 +380,58 @@ for nm1 = 1:N_mx1f
         fprintf('n_missing_mf=%d\n', n_missing_mf);
     end
 end
+
+%% Run5: test on different E
+mx1_testE = 1:1:5;
+mx2_testE = 0/180*pi:60/180*pi:360/180*pi;
+vx1_testE = 0.1:0.2:1.1;
+vx2_testE = 6/180*pi:6/180*pi:30/180*pi;
+N_mx1 = numel(mx1_testE);
+N_mx2 = numel(mx2_testE);
+N_vx1 = numel(vx1_testE);
+N_vx2 = numel(vx2_testE);
+N_testE = N_mx1*N_mx2*N_vx1*N_vx2;
+k = 1;
+mu_true = zeros(conf_mo.Q,N_testE);
+Pi_true = zeros(conf_mo.Q,conf_mo.Q,N_testE);
+mu_a = zeros(conf_mo.Q,N_testE);
+Pi_a = zeros(conf_mo.Q,conf_mo.Q,N_testE);
+NEES_mo = zeros(1,N_testE);
+maxE = 5;
+conf_mo_testE = generateLMCsets(maxE);
+for nm1 = 1:N_mx1
+    for nm2 = 1:N_mx2
+        for nv1 = 1:N_vx1
+            for nv2 = 1:N_vx2
+                m = [mx1_testE(nm1); mx2_testE(nm2)];
+                P = [vx1_testE(nv1), 0; 0, vx2_testE(nv2)];
+                
+                xdistribution = Gaussian(m,P);
+                x_mc = xdistribution.drawRndSamples(num_MC);
+                g_mc = func_g(x_mc) + obs_noise.drawRndSamples(num_MC);
+                mu_mc = mean(g_mc,2);
+                pi_mc = cov(g_mc');
+                mu_true(:,k) = mu_mc;
+                Pi_true(:,:,k) = pi_mc;
+                
+                [data_train_mo, conf_mo] = generateMissingTrainingData(m, P, func_g, conf_mo);  % MOGPQ
+                [mu_mo, Pi_mo, C_mo] = GPQMT_MO(m, P, data_train_mo, conf_mo);
+                mu_a_mo(:,k) = mu_mo;
+                Pi_a_mo(:,:,k) = Pi_mo;
+                
+                errors_mo = bsxfun(@minus, mu_mo, g_mc);
+                NEESs_mo = errors_mo' / Pi_mo * errors_mo;
+                NEES_mo(1,k) = mean(diag(NEESs_mo));
+                
+                disp(k);
+                k = k+1;
+            end
+        end
+    end
+end
+RMSE_mo_testE = sqrt(1/N_testE*sum(sum((mu_true-mu_a_mo).^2)));
+JNEES_mo_testE = sqrt(log(mean(NEES_mo)/conf_mo.Q)^2);
+
 
 %% Figures
 figure(1); title('results with UT sigma points input'); set(gcf,'unit','centimeters','position',[5 5 16 14])
