@@ -31,7 +31,7 @@ for e = 1:E_state  % set each gp
     confState.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confState.sample_cov_ref = sample_cov_ref;
-confState.sample_method = 'UKF';
+confState.sample_method = 'Asymmetric LCD';
 
 confMeas.model = 'LMC';
 E_meas = 1; confMeas.LMCsettings.E = E_meas;  % num latent functions
@@ -46,7 +46,7 @@ for e = 1:E_meas  % set each gp
     confMeas.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confMeas.sample_cov_ref = sample_cov_ref;
-confMeas.sample_method = 'UKF';
+confMeas.sample_method = 'Asymmetric LCD';
 
 confState_so = confState;
 confState_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
@@ -306,6 +306,38 @@ for figureNum = confState.D+1:confState.D*2
     % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
     legend show;    
 end
+
+% figure(21); 
+% stateLabel = {'位置','速度','弹道参数'};
+% StateLabel = {'位置','速度','弹道参数'};
+% sposts = zeros(confState.D, numTimeSteps);
+% for n = 1:numTimeSteps
+%     sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
+% end
+% for figureNum = confState.D+1:confState.D*2
+%     % figure(figureNum)
+%     stateNum = figureNum - confState.D;
+%     subplot(3,1,stateNum);
+%     if stateNum == 3
+%         axis([0 300 -8 8]);
+%     end
+%     hold on
+%     xlabel('时间');
+%     ylabel(stateLabel(stateNum));
+%     titlename = strcat(StateLabel(stateNum),'状态轨迹');
+%     title(titlename);
+%     ns = 1:numTimeSteps;
+%     mpost = updatedStateMeansGP(stateNum,:)';
+%     spost = (sqrt(sposts(stateNum,:)))';
+%     hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
+%     % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
+%     set(hi,'handlevisibility','off');
+%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','更新均值');
+%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','真实状态');
+%     %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+%     % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
+%     legend show;    
+% end
 
 
 % measLabel = {'measure'};

@@ -10,14 +10,14 @@ conf_mo.sample_method = 'UKF';
 confs = cell(1,maxE);
 
 weights_sets = cell(1,maxE);
-weights_sets{1} = 1;
-weights_sets{2} = [1, 0.2; 0.2, 1];
-weights_sets{3} = [1, 0.2; 0.2, 1];
-weights_sets{4} = 1;
-weights_sets{5} = 1;
+weights_sets{1} = [1,-0.8];
+weights_sets{2} = [1, -0.4;  -0.4, 1];
+weights_sets{3} = [1, -0.4; -0.4, 1; 0.4, -0.2];
+weights_sets{4} = [1, -0.4; -0.4, 1; -0.2, 0.4; 0.4, -0.2];
+weights_sets{5} = [1, -0.4; -0.4, 1; -0.2, 0.4; 0.4, -0.2; 0.2, -0.1];
+weights_sets{6} = [1, -0.4; -0.4, 1; -0.2, 0.4; 0.4, -0.2; -0.1, 0.2; 0.2, -0.1];
 
 for E = 1:maxE
-    conf_mo = rmfield(conf_mo,'LMCsettings');
     conf_mo.LMCsettings.E = E;  % num latent functions
     conf_mo.LMCsettings.weights = weights_sets{E};
     conf_mo.LMCsettings.gp = struct('covfunc',cell(E,1),'meanfunc',cell(E,1),'hyp',cell(E,1));
@@ -29,6 +29,7 @@ for E = 1:maxE
         conf_mo.LMCsettings.gp(e).hyp.lik = log(sqrt(0.4));
     end
     confs{E} = conf_mo;
+    conf_mo = rmfield(conf_mo,'LMCsettings');
 end
 
 end
