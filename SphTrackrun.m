@@ -275,41 +275,9 @@ end
 %     legend show;
 % end
 
-figure(20); 
-stateLabel = {'position','velocity','ballistic parameter'};
-StateLabel = {'Position','Velocity','Ballistic parameter'};
-sposts = zeros(confState.D, numTimeSteps);
-for n = 1:numTimeSteps
-    sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
-end
-for figureNum = confState.D+1:confState.D*2
-    % figure(figureNum)
-    stateNum = figureNum - confState.D;
-    subplot(3,1,stateNum);
-    if stateNum == 3
-        axis([0 300 -8 8]);
-    end
-    hold on
-    xlabel('time index');
-    ylabel(stateLabel(stateNum));
-    titlename = strcat(StateLabel(stateNum),' state trajectory');
-    title(titlename);
-    ns = 1:numTimeSteps;
-    mpost = updatedStateMeansGP(stateNum,:)';
-    spost = (sqrt(sposts(stateNum,:)))';
-    hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
-    % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
-    set(hi,'handlevisibility','off');
-    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
-    plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','True states');
-    %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
-    % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
-    legend show;    
-end
-
-% figure(21); 
-% stateLabel = {'位置','速度','弹道参数'};
-% StateLabel = {'位置','速度','弹道参数'};
+% figure(20); 
+% stateLabel = {'position','velocity','ballistic parameter'};
+% StateLabel = {'Position','Velocity','Ballistic parameter'};
 % sposts = zeros(confState.D, numTimeSteps);
 % for n = 1:numTimeSteps
 %     sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
@@ -322,9 +290,9 @@ end
 %         axis([0 300 -8 8]);
 %     end
 %     hold on
-%     xlabel('时间');
+%     xlabel('time index');
 %     ylabel(stateLabel(stateNum));
-%     titlename = strcat(StateLabel(stateNum),'状态轨迹');
+%     titlename = strcat(StateLabel(stateNum),' state trajectory');
 %     title(titlename);
 %     ns = 1:numTimeSteps;
 %     mpost = updatedStateMeansGP(stateNum,:)';
@@ -332,12 +300,44 @@ end
 %     hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
 %     % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
 %     set(hi,'handlevisibility','off');
-%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','更新均值');
-%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','真实状态');
+%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
+%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','True states');
 %     %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
 %     % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
 %     legend show;    
 % end
+
+figure(21); 
+stateLabel = {'位置','速度','弹道参数'};
+StateLabel = {'位置','速度','弹道参数'};
+sposts = zeros(confState.D, numTimeSteps);
+for n = 1:numTimeSteps
+    sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
+end
+for figureNum = confState.D+1:confState.D*2
+    % figure(figureNum)
+    stateNum = figureNum - confState.D;
+    subplot(3,1,stateNum);
+    if stateNum == 3
+        axis([0 300 -8 8]);
+    end
+    hold on
+    xlabel('时间');
+    ylabel(stateLabel(stateNum));
+    titlename = strcat(StateLabel(stateNum),'状态轨迹');
+    title(titlename);
+    ns = 1:numTimeSteps;
+    mpost = updatedStateMeansGP(stateNum,:)';
+    spost = (sqrt(sposts(stateNum,:)))';
+    hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.8,0.8,0.8], 'EdgeColor', 'none'); % This is the grey area in the plot.
+    % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
+    set(hi,'handlevisibility','off');
+    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:),'Color', 'black', 'Linestyle', '--', 'DisplayName','更新均值');
+    plot(1:numTimeSteps, sysStates(stateNum,:),'Color', 'black', 'DisplayName','真实状态');
+    %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+    % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
+    legend show;    
+end
 
 
 % measLabel = {'measure'};

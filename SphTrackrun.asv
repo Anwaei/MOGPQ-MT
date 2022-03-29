@@ -31,7 +31,7 @@ for e = 1:E_state  % set each gp
     confState.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confState.sample_cov_ref = sample_cov_ref;
-confState.sample_method = 'UKF';
+confState.sample_method = 'Asymmetric LCD';
 
 confMeas.model = 'LMC';
 E_meas = 1; confMeas.LMCsettings.E = E_meas;  % num latent functions
@@ -46,7 +46,7 @@ for e = 1:E_meas  % set each gp
     confMeas.LMCsettings.gp(e).hyp.lik = log(sqrt(sigma2_noise));
 end
 confMeas.sample_cov_ref = sample_cov_ref;
-confMeas.sample_method = 'UKF';
+confMeas.sample_method = 'Asymmetric LCD';
 
 confState_so = confState;
 confState_so.LMCsettings.weights = [1 0 0; 0 1 0; 0 0 1];
@@ -178,8 +178,8 @@ for m = 1:numMC
     RMSEState_ut = sqrt(1/numTimeSteps*sum(sum((updatedPosMean_ut-sysStates).^2)));
     RMSEState_mo = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP-sysStates).^2)));
     RMSEState_so = sqrt(1/numTimeSteps*sum(sum((updatedStateMeansGP_so-sysStates).^2)));
-    fprintf('RMSEState_ukf = %.4f, RMSEState_ekf = %.4f, RMSEState_mo = %.4f, RMSEState_so = %.4f\n', ...
-        RMSEState_ut, RMSEState_ekf, RMSEState_mo, RMSEState_so);
+    fprintf('RMSEState_ekf = %.4f, RMSEState_ukf = %.4f, RMSEState_mo = %.4f, RMSEState_so = %.4f\n', ...
+        RMSEState_ekf, RMSEState_ut, RMSEState_mo, RMSEState_so);
     
     NEESState_ut = zeros(1,numTimeSteps);
     NEESState_ekf = zeros(1,numTimeSteps);
@@ -203,12 +203,12 @@ for m = 1:numMC
         cov_so = updatedStateCovsGP_so(:,:,kt);
         NEESState_so(kt) = err_so'/cov_so*err_so;
     end
-    JNEESState_ekf = sqrt(log(mean(NEESState_ut)/confState.Q)^2);
+    JNEESState_ekf = sqrt(log(mean(NEESState_ekf)/confState.Q)^2);
     JNEESState_ut = sqrt(log(mean(NEESState_ut)/confState.Q)^2);
     JNEESState_mo = sqrt(log(mean(NEESState_mo)/confState.Q)^2);
     JNEESState_so = sqrt(log(mean(NEESState_so)/confState.Q)^2);
-    fprintf('JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
-        JNEESState_ut, JNEESState_mo, JNEESState_so);
+    fprintf('JNEESState_ekf = %.4f, JNEESState_ut = %.4f, JNEESState_mo = %.4f, JNEESState_so = %.4f\n', ...
+        JNEESState_ekf, JNEESState_ut, JNEESState_mo, JNEESState_so);
     
     RMSEState_ut_mc(m) = RMSEState_ut;
     RMSEState_mo_mc(m) = RMSEState_mo;
@@ -275,9 +275,41 @@ end
 %     legend show;
 % end
 
-figure(20); 
-stateLabel = {'position','velocity','ballistic parameter'};
-StateLabel = {'Position','Velocity','Ballistic parameter'};
+% figure(20); 
+% stateLabel = {'position','velocity','ballistic parameter'};
+% StateLabel = {'Position','Velocity','Ballistic parameter'};
+% sposts = zeros(confState.D, numTimeSteps);
+% for n = 1:numTimeSteps
+%     sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
+% end
+% for figureNum = confState.D+1:confState.D*2
+%     % figure(figureNum)
+%     stateNum = figureNum - confState.D;
+%     subplot(3,1,stateNum);
+%     if stateNum == 3
+%         axis([0 300 -8 8]);
+%     end
+%     hold on
+%     xlabel('time index');
+%     ylabel(stateLabel(stateNum));
+%     titlename = strcat(StateLabel(stateNum),' state trajectory');
+%     title(titlename);
+%     ns = 1:numTimeSteps;
+%     mpost = updatedStateMeansGP(stateNum,:)';
+%     spost = (sqrt(sposts(stateNum,:)))';
+%     hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
+%     % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
+%     set(hi,'handlevisibility','off');
+%     plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
+%     plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','True states');
+%     %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
+%     % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
+%     legend show;    
+% end
+
+figure(21); 
+stateLabel = {'位置','速度','弹道参数'};
+StateLabel = {'位置','速度','弹道参数'};
 sposts = zeros(confState.D, numTimeSteps);
 for n = 1:numTimeSteps
     sposts(:,n) = diag(updatedStateCovsGP(:,:,n));
@@ -290,18 +322,18 @@ for figureNum = confState.D+1:confState.D*2
         axis([0 300 -8 8]);
     end
     hold on
-    xlabel('time index');
+    xlabel('时间');
     ylabel(stateLabel(stateNum));
-    titlename = strcat(StateLabel(stateNum),' state trajectory');
+    titlename = strcat(StateLabel(stateNum),'状态轨迹');
     title(titlename);
     ns = 1:numTimeSteps;
     mpost = updatedStateMeansGP(stateNum,:)';
     spost = (sqrt(sposts(stateNum,:)))';
-    hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [0.9,0.9,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
+    hi = patch([ns, fliplr(ns)],[mpost-2*spost; flipud(mpost+2*spost)], 1, 'FaceColor', [1,1,1], 'EdgeColor', 'none'); % This is the grey area in the plot.
     % patch([ns, fliplr(ns)],[mpost-sPost; flipud(mPost+sPost)], 1, 'FaceColor', [1,1,1]*0.8, 'EdgeColor', 'none'); % This is the grey area in the plot.
     set(hi,'handlevisibility','off');
-    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:), 'DisplayName','Updated means');
-    plot(1:numTimeSteps, sysStates(stateNum,:), 'DisplayName','True states');
+    plot(1:numTimeSteps, updatedStateMeansGP(stateNum,:),'b', '-', 'DisplayName','更新均值');
+    plot(1:numTimeSteps, sysStates(stateNum,:), 'b', '', 'DisplayName','真实状态');
     %    plot(1:numTimeSteps, measurements, 'DisplayName','Measurements');
     % plot(1:numTimeSteps, predStateMeansGP(stateNum,:), 'DisplayName','Predicted means');
     legend show;    
